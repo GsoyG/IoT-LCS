@@ -1,0 +1,40 @@
+# 忽略通用文件和目录
+.DS_Store
+Thumbs.db
+*.py[cod]
+*.swp
+*.swo
+*.lock
+.idea/
+.vscode/
+*.log
+*.tmp
+*.bak
+*.old
+*.backup
+*.cache
+__pycache__/
+
+# 忽略Python虚拟环境
+venv/
+env/
+.venv/
+env.bak/
+venv.bak/
+
+# 忽略Python生成的文件和缓存
+*.pyc
+*.pyo
+*.pyd
+*.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache/
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+
+config.json
