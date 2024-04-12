@@ -53,7 +53,7 @@ export default {
     },
     async sendUpdateRequest() {
       try {
-        const apiUrl = 'https://your-api-url.com/lights/update'; // Replace with your actual API URL
+        const apiUrl = 'https://your-api-url.com/lights/update';
         await axios.put(apiUrl, this.light);
         console.log('Light settings updated successfully.');
       } catch (error) {
