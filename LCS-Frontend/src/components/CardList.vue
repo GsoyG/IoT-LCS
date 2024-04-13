@@ -27,47 +27,98 @@
   </v-container>
 </template>
 
-<script>
+<script setup>
 import axios from 'axios';
+import { ref, onMounted } from 'vue';
 
-export default {
-  props: {
-    items: {
-      type: Array,
-      required: true,
-    },
+const items = ref([
+  {
+    'Device': '灯泡1',
+    'Power': 0,
+    'Dimmer': 20,
+    'RGB': 'FF5722',
   },
-  methods: {
-    getLightingState(item) {
-      if (!item.Reachable) {
-        return '已离线';
-      }
-      if (item.Power) {
-        return '已开启';
-      }
-      return '已关闭';
-    },
-    async switchLightingPower(item) {
-      try {
-        var power = Boolean(item.Power)
-        var state = power ? '{"Power": 0}' : '{"Power": 1}';
+  {
+    'Device': '灯泡2',
+    'Power': 1,
+    'Dimmer': 50,
+    'RGB': '4CAF50',
+  },
+  {
+    'Device': '0xA821',
+    'IEEEAddr': '0xA4C138727417E5E1',
+    'ModelId': 'TS0505B',
+    'Manufacturer': '_TZ3210_mja6r5ix',
+    'Endpoints': [
+      1
+    ],
+    'Config': [
+      'O01',
+      'L01'
+    ],
+    'Power': 1,
+    'Dimmer': 10,
+    'Hue': 0,
+    'Sat': 250,
+    'X': 10040,
+    'Y': 3116,
+    'CT': 0,
+    'ColorMode': 2,
+    'RGB': 'FF0404',
+    'RGBb': '0A0000',
+    'Reachable': false,
+    'LastSeen': 144544,
+    'LastSeenEpoch': 1712682096,
+    'LinkQuality': 105
+  }
+]);
 
-        const response = await axios.get('/api/lighting/setState', {
-          params: {
-            device: item.Device,
-            state: state,
-          },
-        });
-        if (response.status === 200) {
-          Object.assign(item, response.data);
-          console.log(item);
-        } else {
-          console.error('Failed to switch lighting power:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Error switching lighting power:', error);
-      }
-    },
-  },
-};
+onMounted(() => {
+  fetchCardData();
+});
+
+async function fetchCardData() {
+  try {
+    const response = await axios.get('/api/lighting/devices');
+    if (response.status === 200) {
+      items.value = response.data;
+    } else {
+      console.error('Failed to fetch card data:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching card data:', error);
+  }
+}
+
+function getLightingState(item) {
+  if (!item.Reachable) {
+    return '已离线';
+  }
+  if (item.Power) {
+    return '已开启';
+  }
+  return '已关闭';
+}
+
+async function switchLightingPower(item) {
+  try {
+    var power = Boolean(item.Power)
+    var state = power ? '{"Power": 0}' : '{"Power": 1}';
+
+    const response = await axios.get('/api/lighting/setState', {
+      params: {
+        device: item.Device,
+        state: state,
+      },
+    });
+    if (response.status === 200) {
+      fetchCardData();
+    } else {
+      console.error('Failed to switch lighting power:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error switching lighting power:', error);
+  }
+}
+
 </script>
