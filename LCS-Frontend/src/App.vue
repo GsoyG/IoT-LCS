@@ -61,19 +61,19 @@ export default {
     };
   },
   created() {
-    this.fetchChartData();
+    this.fetchCardData();
   },
   methods: {
-    async fetchChartData() {
+    async fetchCardData() {
       try {
         const response = await axios.get('/api/lighting/devices');
         if (response.status === 200) {
-          this.chartData = response.data;
+          this.cardData = response.data;
         } else {
-          console.error('Failed to fetch chart data:', response.statusText);
+          console.error('Failed to fetch card data:', response.statusText);
         }
       } catch (error) {
-        console.error('Error fetching chart data:', error);
+        console.error('Error fetching card data:', error);
       }
     },
   },

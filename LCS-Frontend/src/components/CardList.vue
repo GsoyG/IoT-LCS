@@ -5,16 +5,19 @@
         <v-card outlined>
           <v-card-title>{{ item.Device }}</v-card-title>
           <div class="px-4 pb-4">
-            <v-row no-gutters justify="center">
+            <v-row class="pb-8" no-gutters justify="center">
               <v-col cols="auto">
-                <v-switch :model-value="Boolean(item.Power)" inset />
+                <v-btn prepend-icon="mdi-lightbulb" :color="`${item.Reachable && Boolean(item.Power) ? 'primary' : ''}`"
+                  stacked>
+                  {{ getLightingStatus(item) }}
+                </v-btn>
               </v-col>
             </v-row>
             <v-progress-linear :model-value="item.Dimmer" :color="`#${item.RGB}`" height="20"
               rounded></v-progress-linear>
             <v-row class="pt-4" no-gutters justify="end">
               <v-col cols="auto">
-                <v-btn @click="handleEditClick">编辑</v-btn>
+                <v-btn>编辑</v-btn>
               </v-col>
             </v-row>
           </div>
@@ -30,6 +33,17 @@ export default {
     items: {
       type: Array,
       required: true,
+    },
+  },
+  methods: {
+    getLightingStatus(item) {
+      if (!item.Reachable) {
+        return '已离线';
+      }
+      if (item.Power) {
+        return '开启中';
+      }
+      return '已关闭';
     },
   },
 };

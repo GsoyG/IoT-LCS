@@ -24,7 +24,10 @@ async def handle_index(request):
 
 # 获取设备列表
 async def get_lighting_devices(request):
-    headers = {'Content-Type': 'application/json'}
+    headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+    }
     json_data = json.dumps(await cli.get_device_list())
     return web.Response(body = json_data.encode('utf-8'), headers = headers, status = 200)
 
