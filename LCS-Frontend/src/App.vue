@@ -10,6 +10,7 @@
 <script>
 import CardList from '@/components/CardList.vue';
 import axios from 'axios';
+import { ref } from 'vue';
 
 export default {
   components: {
@@ -17,7 +18,7 @@ export default {
   },
   data() {
     return {
-      cardData: [
+      cardData: ref[
         {
           'Device': '灯泡1',
           'Power': 0,

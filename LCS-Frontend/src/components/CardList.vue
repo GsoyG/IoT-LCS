@@ -1,15 +1,15 @@
 <template>
   <v-container>
     <v-row dense>
-      <v-col v-for="item in items" cols="12" sm="6" md="4">
+      <v-col v-for="(item, index) in items" cols="12" sm="6" md="4">
         <v-card outlined>
           <v-card-title>{{ item.Device }}</v-card-title>
           <div class="px-4 pb-4">
             <v-row class="pb-8" no-gutters justify="center">
               <v-col cols="auto">
                 <v-btn prepend-icon="mdi-lightbulb" :color="`${item.Reachable && Boolean(item.Power) ? 'primary' : ''}`"
-                  stacked>
-                  {{ getLightingStatus(item) }}
+                  @click="switchLightingPower(item, index)" stacked>
+                  {{ getLightingState(item) }}
                 </v-btn>
               </v-col>
             </v-row>
@@ -28,6 +28,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   props: {
     items: {
@@ -36,7 +38,7 @@ export default {
     },
   },
   methods: {
-    getLightingStatus(item) {
+    getLightingState(item) {
       if (!item.Reachable) {
         return '已离线';
       }
@@ -44,6 +46,26 @@ export default {
         return '开启中';
       }
       return '已关闭';
+    },
+    async switchLightingPower(item, index) {
+      try {
+        var state = Boolean(item.Power) ? '{"Power": 0}' : '{"Power": 1}';
+
+        const response = await axios.get('/api/lighting/setState', {
+          params: {
+            Device: item.Device,
+            State: state,
+          },
+        });
+        if (response.status === 200) {
+          Object.assign(this.props.items[index], response.data);
+          console.log(this.props.items[0]);
+        } else {
+          console.error('Failed to switch lighting power:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error switching lighting power:', error);
+      }
     },
   },
 };
