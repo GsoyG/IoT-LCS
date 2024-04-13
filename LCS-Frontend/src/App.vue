@@ -8,14 +8,10 @@
 </template>
 
 <script>
-import CardList from '@/components/CardList.vue';
 import axios from 'axios';
 import { ref } from 'vue';
 
 export default {
-  components: {
-    CardList,
-  },
   data() {
     return {
       cardData: ref[

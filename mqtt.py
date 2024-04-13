@@ -54,4 +54,4 @@ class MqttClient:
                 if 'ZbReceived' in parsed_msg:
                     parsed_msg = parsed_msg['ZbReceived']
                     print(parsed_msg)
-                    return parsed_msg
+                    return parsed_msg[device]

@@ -28,8 +28,8 @@ async def get_device_list(request):
 
 # 设置设备状态
 async def set_device_state(request):
-    device = request.query['Device']
-    state = json.loads(request.query['State'])
+    device = request.query['device']
+    state = json.loads(request.query['state'])
     return web.json_response(await cli.set_device_state(device, state)
 )
 
