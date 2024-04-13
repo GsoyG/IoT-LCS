@@ -23,18 +23,29 @@ async def handle_index(request):
     })
 
 # 获取设备列表
-async def get_lighting_devices(request):
-    headers = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-    }
-    json_data = json.dumps(await cli.get_device_list())
-    return web.Response(body = json_data.encode('utf-8'), headers = headers, status = 200)
+async def get_device_list(request):
+    return web.json_response(await cli.get_device_list())
+
+# 设置设备状态
+async def set_device_state(request):
+    deviceName = request.query['deviceName']
+    state = json.loads(request.query['state'])
+    return web.json_response(await cli.set_device_state(deviceName, state)
+)
+
+# 设置中间件
+async def cors_middleware(app, handler):
+    async def middleware_handler(request):
+        response = await handler(request)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+    return middleware_handler
 
 # 初始化服务器
-app = web.Application()
+app = web.Application(middlewares=[cors_middleware])
 app.router.add_get('/', handle_index)
-app.router.add_get('/api/lighting/devices', get_lighting_devices)
+app.router.add_get('/api/lighting/devices', get_device_list)
+app.router.add_get('/api/lighting/setState', set_device_state)
 
 if __name__ == '__main__':
     # 初始化MQTT

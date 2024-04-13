@@ -39,3 +39,19 @@ class MqttClient:
                     for key, value in parsed_msg.items():
                         self.__device_list.append(value)
                     return self.__device_list
+    
+    async def set_device_state(self, device_name, state):
+        async with aiomqtt.Client(self.__hostData['hostname'], username = self.__hostData['username'],
+                                  password =  self.__hostData['password'], identifier = self.__hostData['identifier']) as client:
+            await client.subscribe('tele/' + self.__gateway_name + '/SENSOR')
+
+            await client.publish('cmnd/ZigbeeGateway/ZbSend', json.dumps({
+                'Device': device_name,
+                'Send': state
+            }).encode('utf-8'))
+            async for message in client.messages:
+                parsed_msg = json.loads(message.payload)
+                if 'ZbReceived' in parsed_msg:
+                    parsed_msg = parsed_msg['ZbReceived']
+                    print(parsed_msg)
+                    return parsed_msg
