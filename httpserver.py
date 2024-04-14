@@ -1,7 +1,13 @@
+import logging
 from aiohttp import web
 from aiohttp.web import middleware
 from collections import deque
 from datetime import datetime, timedelta
+
+# 配置 logging
+logging.basicConfig(level=logging.DEBUG)
+aiohttp_logger = logging.getLogger("aiohttp.server")
+aiohttp_logger.setLevel(logging.DEBUG)
 
 class HttpServer:
     app = None
