@@ -19,6 +19,7 @@ class MqttClient:
         'identifier': '',
     }
     __device_list = []
+    __isConnected = False
 
     def init(self, hostname, username, password):
         characters = string.ascii_letters + string.digits
@@ -31,23 +32,31 @@ class MqttClient:
         self.__hostData['identifier'] = identifier
 
     async def send(self, topic, subscribe, message_header, payload = None):
+        if self.__isConnected == True:
+            return None
+
         async with aiomqtt.Client(self.__hostData['hostname'], username = self.__hostData['username'],
-                                  password =  self.__hostData['password'], identifier = self.__hostData['identifier']) as client:
+                                  password =  self.__hostData['password'],
+                                  identifier = self.__hostData['identifier']) as client:
+            self.__isConnected = True
+
             await client.subscribe(subscribe)
 
-            if payload != None:
+            if payload is not None:
                 payload = json.dumps(payload).encode('utf-8')
             await client.publish(topic, payload)
             
             async for message in client.messages:
                 parsed_msg = json.loads(message.payload)
                 if message_header in parsed_msg:
+                    self.__isConnected = False
                     return parsed_msg[message_header]
 
     async def get_device_list(self):
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
         data = await self.send('cmnd/ZigbeeGateway/ZbInfo', subscribe, 'ZbInfo')
-        print(data)
+        if data is None:
+            return None
 
         self.__device_list.clear()
         for key, value in data.items():
@@ -61,6 +70,6 @@ class MqttClient:
             'Send': state
         }
         data = await self.send('cmnd/ZigbeeGateway/ZbSend', subscribe, 'ZbReceived', payload)
-        print(data)
-        
+        if data is None:
+            return None
         return data[device]

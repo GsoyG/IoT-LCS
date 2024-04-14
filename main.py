@@ -10,20 +10,25 @@ cli = MqttClient()
 async def handle_index(request):
     index_html_path = Path(__file__).parent.resolve() / 'static' / 'index.html'
 
-    return web.FileResponse(index_html_path, headers={
+    return web.FileResponse(index_html_path, headers = {
         'Cache-Control': 'no-cache',
     })
 
 # 获取设备列表
 async def get_device_list(request):
-    return web.json_response(await cli.get_device_list())
+    data = await cli.get_device_list()
+    if data is None:
+        return web.Response(status = 429, text = "The last request for connection was not closed")
+    return web.json_response(data)
 
 # 设置设备状态
 async def set_device_state(request):
     device = request.query['device']
     state = json.loads(request.query['state'])
-    return web.json_response(await cli.set_device_state(device, state)
-)
+    data = await cli.set_device_state(device, state)
+    if data is None:
+        return web.Response(status = 429, text = "The last request for connection was not closed")
+    return web.json_response(data)
 
 if __name__ == '__main__':
     with open('config.json', 'r') as config_file:
