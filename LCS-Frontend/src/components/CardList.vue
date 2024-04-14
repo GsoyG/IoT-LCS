@@ -7,7 +7,9 @@
           <div class="px-4 pb-4">
             <v-row class="pb-8" no-gutters justify="center">
               <v-col cols="auto">
-                <v-btn prepend-icon="mdi-lightbulb" :color="`${item.Reachable && Boolean(item.Power) ? 'primary' : ''}`"
+                <v-btn
+                  :prepend-icon="`${item.Reachable && Boolean(item.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'}`"
+                  :color="`${item.Reachable && Boolean(item.Power) ? 'primary' : ''}`"
                   @click="switchLightingPower(item)" stacked>
                   {{ getLightingState(item) }}
                 </v-btn>
