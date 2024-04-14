@@ -6,8 +6,7 @@ from datetime import datetime, timedelta
 class HttpServer:
     app = None
 
-    __limit_per_interval = 1  # 每个时间间隔允许的最大请求次数
-    __interval_length = 2  # 时间间隔，单位：秒
+    __interval_length = 1  # 时间间隔，单位：秒
     __request_counts = deque(maxlen=__interval_length) # 存储请求计数的队列，用于滑动窗口算法
 
     # 中间件
@@ -21,8 +20,7 @@ class HttpServer:
 
         # 计算当前时间间隔内的请求总数
         current_count = sum(1 for _ in filter(lambda t: t >= current_time - timedelta(seconds=self.__interval_length), self.__request_counts))
-
-        if current_count >= self.__limit_per_interval:
+        if current_count >= 1:
             return web.Response(status=429, text="Too Many Requests")  # 返回429状态码，表示请求被限流
 
         # 添加新请求计数

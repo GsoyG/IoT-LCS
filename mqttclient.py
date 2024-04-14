@@ -30,35 +30,37 @@ class MqttClient:
         self.__hostData['password'] = password
         self.__hostData['identifier'] = identifier
 
-    async def get_device_list(self):
+    async def send(self, topic, subscribe, message_header, payload = None):
         async with aiomqtt.Client(self.__hostData['hostname'], username = self.__hostData['username'],
                                   password =  self.__hostData['password'], identifier = self.__hostData['identifier']) as client:
-            await client.subscribe('tele/' + self.__gateway_name + '/SENSOR')
+            await client.subscribe(subscribe)
 
-            await client.publish('cmnd/ZigbeeGateway/ZbInfo')
+            if payload != None:
+                payload = json.dumps(payload).encode('utf-8')
+            await client.publish(topic, payload)
+            
             async for message in client.messages:
                 parsed_msg = json.loads(message.payload)
-                if 'ZbInfo' in parsed_msg:
-                    parsed_msg = parsed_msg['ZbInfo']
-                    print(parsed_msg)
-                    
-                    self.__device_list.clear()
-                    for key, value in parsed_msg.items():
-                        self.__device_list.append(value)
-                    return self.__device_list
+                if message_header in parsed_msg:
+                    return parsed_msg[message_header]
+
+    async def get_device_list(self):
+        subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
+        data = await self.send('cmnd/ZigbeeGateway/ZbInfo', subscribe, 'ZbInfo')
+        print(data)
+
+        self.__device_list.clear()
+        for key, value in data.items():
+            self.__device_list.append(value)
+        return self.__device_list
     
     async def set_device_state(self, device, state):
-        async with aiomqtt.Client(self.__hostData['hostname'], username = self.__hostData['username'],
-                                  password =  self.__hostData['password'], identifier = self.__hostData['identifier']) as client:
-            await client.subscribe('tele/' + self.__gateway_name + '/SENSOR')
-
-            await client.publish('cmnd/ZigbeeGateway/ZbSend', json.dumps({
-                'Device': device,
-                'Send': state
-            }).encode('utf-8'))
-            async for message in client.messages:
-                parsed_msg = json.loads(message.payload)
-                if 'ZbReceived' in parsed_msg:
-                    parsed_msg = parsed_msg['ZbReceived']
-                    print(parsed_msg)
-                    return parsed_msg[device]
+        subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
+        payload = {
+            'Device': device,
+            'Send': state
+        }
+        data = await self.send('cmnd/ZigbeeGateway/ZbSend', subscribe, 'ZbReceived', payload)
+        print(data)
+        
+        return data[device]
