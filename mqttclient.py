@@ -21,6 +21,7 @@ class MqttClient:
     __device_list = []
     __isConnected = False
 
+    # 初始化客户端字段
     def init(self, hostname, username, password):
         characters = string.ascii_letters + string.digits
         id_string = ''.join(random.choice(characters) for _ in range(6))
@@ -31,6 +32,7 @@ class MqttClient:
         self.__hostData['password'] = password
         self.__hostData['identifier'] = identifier
 
+    # 发送消息并返回响应
     async def send(self, topic, subscribe, message_header, payload = None):
         if self.__isConnected == True:
             return None
@@ -40,12 +42,15 @@ class MqttClient:
                                   identifier = self.__hostData['identifier']) as client:
             self.__isConnected = True
 
+            # 订阅消息
             await client.subscribe(subscribe)
 
+            # 发布消息
             if payload is not None:
                 payload = json.dumps(payload).encode('utf-8')
             await client.publish(topic, payload)
             
+            # 检索响应消息
             async for message in client.messages:
                 parsed_msg = json.loads(message.payload)
                 if message_header in parsed_msg:
@@ -58,6 +63,7 @@ class MqttClient:
         if data is None:
             return None
 
+        # 更新设备列表
         self.__device_list.clear()
         for key, value in data.items():
             self.__device_list.append(value)
