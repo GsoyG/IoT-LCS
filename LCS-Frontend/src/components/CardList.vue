@@ -114,6 +114,10 @@ async function switchLightingPower(item) {
       },
     });
     if (response.status === 200) {
+      Object.assign(item, response.data);
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       fetchCardData();
     } else {
       console.error('Failed to switch lighting power:', response.statusText);
