@@ -3,6 +3,7 @@ import sys
 import json
 import random
 import string
+import asyncio
 import aiomqtt
 
 # 在Windows平台下改变事件循环策略，避免报错
@@ -34,12 +35,15 @@ class MqttClient:
 
     # 发送消息并返回响应
     async def send(self, topic, subscribe, message_header, payload = None):
-        if self.__isConnected == True:
-            return None
+        if self.__isConnected:
+            return "The last request for connection was not closed"
 
-        async with aiomqtt.Client(self.__hostData['hostname'], username = self.__hostData['username'],
-                                  password =  self.__hostData['password'],
-                                  identifier = self.__hostData['identifier']) as client:
+        async with aiomqtt.Client(
+            self.__hostData['hostname'],
+            username = self.__hostData['username'],
+            password =  self.__hostData['password'],
+            identifier = self.__hostData['identifier']
+        )as client:
             self.__isConnected = True
 
             # 订阅消息
@@ -51,17 +55,22 @@ class MqttClient:
             await client.publish(topic, payload)
             
             # 检索响应消息
-            async for message in client.messages:
-                parsed_msg = json.loads(message.payload)
-                if message_header in parsed_msg:
-                    self.__isConnected = False
-                    return parsed_msg[message_header]
+            try:
+                async with asyncio.timeout(2): # 超时时间为 2 秒
+                    async for message in client.messages:
+                        parsed_msg = json.loads(message.payload)
+                        if message_header in parsed_msg:
+                            self.__isConnected = False
+                            return parsed_msg[message_header]
+            except asyncio.TimeoutError:
+                self.__isConnected = False
+            return "Request waiting for response timeout"
 
     async def get_device_list(self):
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
         data = await self.send('cmnd/ZigbeeGateway/ZbInfo', subscribe, 'ZbInfo')
-        if data is None:
-            return None
+        if isinstance(data, str):
+            return data
 
         # 更新设备列表
         self.__device_list.clear()
@@ -76,6 +85,6 @@ class MqttClient:
             'Send': state
         }
         data = await self.send('cmnd/ZigbeeGateway/ZbSend', subscribe, 'ZbReceived', payload)
-        if data is None:
-            return None
+        if isinstance(data, str):
+            return data
         return data[device]

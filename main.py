@@ -17,8 +17,8 @@ async def handle_index(request):
 # 获取设备列表
 async def get_device_list(request):
     data = await cli.get_device_list()
-    if data is None:
-        return web.Response(status = 429, text = "The last request for connection was not closed")
+    if isinstance(data, str):
+        return web.Response(status = 429, text = data)
     return web.json_response(data)
 
 # 设置设备状态
@@ -26,8 +26,8 @@ async def set_device_state(request):
     device = request.query['device']
     state = json.loads(request.query['state'])
     data = await cli.set_device_state(device, state)
-    if data is None:
-        return web.Response(status = 429, text = "The last request for connection was not closed")
+    if isinstance(data, str):
+        return web.Response(status = 429, text = data)
     return web.json_response(data)
 
 if __name__ == '__main__':
