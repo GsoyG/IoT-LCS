@@ -10,7 +10,7 @@
                 <v-btn
                   :prepend-icon="`${item.Reachable && Boolean(item.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'}`"
                   :color="`${item.Reachable && Boolean(item.Power) ? 'primary' : ''}`"
-                  @click="switchLightingPower(item)" stacked>
+                  @click="switchLightingPower(item)" :disabled="item.disabled || !item.Reachable" stacked>
                   {{ getLightingState(item) }}
                 </v-btn>
               </v-col>
@@ -107,6 +107,7 @@ async function switchLightingPower(item) {
     var power = Boolean(item.Power)
     var state = power ? '{"Power": 0}' : '{"Power": 1}';
 
+    item.disabled = true;
     const response = await axios.get('/api/lighting/setState', {
       params: {
         device: item.Device,
@@ -125,6 +126,6 @@ async function switchLightingPower(item) {
   } catch (error) {
     console.error('Error switching lighting power:', error);
   }
+  item.disabled = false;
 }
-
 </script>
