@@ -4,25 +4,47 @@
       <v-col v-for="item in items" cols="12" sm="6" md="4">
         <v-card outlined>
           <v-card-title>{{ item.Device }}</v-card-title>
-          <div class="px-4 pb-4">
-            <v-row class="pb-8" no-gutters justify="center">
+
+          <v-card-text>
+            <v-row class="pb-8" justify="center">
               <v-col cols="auto">
-                <v-btn
-                  :prepend-icon="`${item.Reachable && Boolean(item.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'}`"
-                  :color="`${item.Reachable && Boolean(item.Power) ? 'primary' : ''}`"
+                <v-btn :prepend-icon="item.Reachable && Boolean(item.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
+                  :color="item.Reachable && Boolean(item.Power) ? 'primary' : ''" variant="tonal" rounded="lg"
                   @click="switchLightingPower(item)" :disabled="item.disabled || !item.Reachable" stacked>
                   {{ getLightingState(item) }}
                 </v-btn>
               </v-col>
             </v-row>
-            <v-progress-linear :model-value="item.Dimmer" :color="`#${item.RGB}`" height="20"
+
+            <v-progress-linear :model-value="item.Dimmer / 254 * 100" :color="`#${item.RGB}`" height="20"
               rounded></v-progress-linear>
-            <v-row class="pt-4" no-gutters justify="end">
-              <v-col cols="auto">
-                <v-btn>编辑</v-btn>
-              </v-col>
-            </v-row>
-          </div>
+          </v-card-text>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-dialog max-width="500">
+              <template v-slot:activator="{ props: activatorProps }">
+                <v-btn v-bind="activatorProps" text="编辑" :disabled="!item.Reachable"></v-btn>
+              </template>
+
+              <template v-slot:default="{ isActive }">
+                <v-card title="设备编辑">
+                  <v-card-text>
+                    <v-slider min="0" max="254" step="1" v-model="item.Dimmer" label="亮度"
+                      @click="changedConfig['Dimmer'] = item.Dimmer"></v-slider>
+                  </v-card-text>
+
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text="设置" @click="saveLightingConfig(item)" color="primary"
+                      :disabled="item.disabled"></v-btn>
+                    <v-btn text="关闭" @click="isActive.value = false"></v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
+          </v-card-actions>
+
         </v-card>
       </v-col>
     </v-row>
@@ -74,6 +96,7 @@ const items = ref([
     'LinkQuality': 105
   }
 ]);
+const changedConfig = ref({});
 
 onMounted(() => {
   fetchCardData();
@@ -116,9 +139,7 @@ async function switchLightingPower(item) {
     });
     if (response.status === 200) {
       Object.assign(item, response.data);
-
       await new Promise(resolve => setTimeout(resolve, 1000));
-
       fetchCardData();
     } else {
       console.error('Failed to switch lighting power:', response.statusText);
@@ -126,6 +147,24 @@ async function switchLightingPower(item) {
   } catch (error) {
     console.error('Error switching lighting power:', error);
   }
+  item.disabled = false;
+}
+
+async function saveLightingConfig(item) {
+  if (Object.keys(changedConfig.value).length === 0) return;
+
+  item.disabled = true;
+  try {
+    const response = await axios.get('/api/lighting/setState', {
+      params: {
+        device: item.Device,
+        state: JSON.stringify(changedConfig.value),
+      },
+    });
+  } catch (error) {
+    console.error('Error saving lighting config:', error);
+  }
+  changedConfig.value = {};
   item.disabled = false;
 }
 </script>

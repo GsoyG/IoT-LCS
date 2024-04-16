@@ -56,7 +56,7 @@ class MqttClient:
             
             # 检索响应消息
             try:
-                async with asyncio.timeout(2): # 超时时间为 2 秒
+                async with asyncio.timeout(3): # 超时时间为 3 秒
                     async for message in client.messages:
                         parsed_msg = json.loads(message.payload)
                         if message_header in parsed_msg:
