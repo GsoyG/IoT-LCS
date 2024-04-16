@@ -8,8 +8,8 @@
           <v-card-text>
             <v-row class="pb-8" justify="center">
               <v-col cols="auto">
-                <v-btn :prepend-icon="device.Reachable && Boolean(device.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
-                  :color="device.Reachable && Boolean(device.Power) ? 'primary' : ''" variant="tonal" rounded="lg"
+                <v-btn :prepend-icon="device.Reachable && device.Dimmer > 1 ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
+                  :color="device.Reachable && device.Dimmer > 1 ? 'primary' : ''" variant="tonal" rounded="lg"
                   @click="switchDevicePower(device)" :disabled="disabledEdit || !device.Reachable" stacked>
                   {{ getStatusText(device) }}
                 </v-btn>
@@ -107,7 +107,7 @@ function getStatusText(device) {
   if (!device.Reachable) {
     return '已离线';
   }
-  if (device.Power) {
+  if (device.Dimmer > 1) {
     return '已开启';
   }
   return '已关闭';
@@ -125,15 +125,14 @@ async function fetchDeviceList() {
   } catch (error) {
     console.error('Error fetching device list:', error);
   }
-  await new Promise(resolve => setTimeout(resolve, 1000));
   disabledEdit.value = false;
 }
 
-async function uploadDeviceState(device, key, value) {
+async function uploadDeviceState(device, key, value, disabled = true) {
   var state = {}
   state[key] = value;
 
-  disabledEdit.value = true;
+  if (disabled) disabledEdit.value = true;
   try {
     const response = await axios.get('/api/lighting/setState', {
       params: {
@@ -142,8 +141,9 @@ async function uploadDeviceState(device, key, value) {
       },
     });
     if (response.status === 200) {
-      Object.assign(device, response.data);
-      disabledEdit.value = false;
+      Object.assign(device, state);
+
+      if (disabled) disabledEdit.value = false;
       return true;
     } else {
       console.error('Failed to upload device state:', response.statusText);
@@ -151,15 +151,20 @@ async function uploadDeviceState(device, key, value) {
   } catch (error) {
     console.error('Error uploading device state:', error);
   }
-  disabledEdit.value = false;
+
+  if (disabled) disabledEdit.value = false;
   return false;
 }
 
 async function switchDevicePower(device) {
-  if (uploadDeviceState(device, 'Power', +!Boolean(device.Power))) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  var power = device.Dimmer > 1 ? 0 : 1
+  disabledEdit.value = true;
+
+  if (await uploadDeviceState(device, 'Power', power, false)) {
+    await new Promise(resolve => setTimeout(resolve, 2000));
     fetchDeviceList();
   }
+  disabledEdit.value = false;
 }
 
 function openEditDialog(device) {
