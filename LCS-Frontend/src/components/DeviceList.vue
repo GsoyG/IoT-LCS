@@ -1,22 +1,22 @@
 <template>
   <v-container>
     <v-row dense>
-      <v-col v-for="item in items" cols="12" sm="6" md="4">
+      <v-col v-for="device in devices" cols="12" sm="6" md="4">
         <v-card outlined>
-          <v-card-title>{{ item.Device }}</v-card-title>
+          <v-card-title>{{ device.Device }}</v-card-title>
 
           <v-card-text>
             <v-row class="pb-8" justify="center">
               <v-col cols="auto">
-                <v-btn :prepend-icon="item.Reachable && Boolean(item.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
-                  :color="item.Reachable && Boolean(item.Power) ? 'primary' : ''" variant="tonal" rounded="lg"
-                  @click="switchLightingPower(item)" :disabled="disabledEdit || !item.Reachable" stacked>
-                  {{ getLightingState(item) }}
+                <v-btn :prepend-icon="device.Reachable && Boolean(device.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
+                  :color="device.Reachable && Boolean(device.Power) ? 'primary' : ''" variant="tonal" rounded="lg"
+                  @click="switchLightingPower(device)" :disabled="disabledEdit || !device.Reachable" stacked>
+                  {{ getLightingState(device) }}
                 </v-btn>
               </v-col>
             </v-row>
 
-            <v-progress-linear :model-value="item.Dimmer / 254 * 100" :color="`#${item.RGB}`" height="20"
+            <v-progress-linear :model-value="device.Dimmer / 254 * 100" :color="`#${device.RGB}`" height="20"
               rounded></v-progress-linear>
           </v-card-text>
 
@@ -24,19 +24,19 @@
             <v-spacer></v-spacer>
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind="activatorProps" text="编辑" :disabled="!item.Reachable"></v-btn>
+                <v-btn v-bind="activatorProps" text="编辑" :disabled="!device.Reachable"></v-btn>
               </template>
 
               <template v-slot:default="{ isActive }">
                 <v-card title="设备编辑">
                   <v-card-text>
-                    <v-slider min="0" max="254" step="1" v-model="item.Dimmer" label="亮度"
-                      @click="changedConfig['Dimmer'] = item.Dimmer"></v-slider>
+                    <v-slider min="0" max="254" step="1" v-model="device.Dimmer" label="亮度"
+                      @click="changedConfig['Dimmer'] = device.Dimmer"></v-slider>
                   </v-card-text>
 
                   <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn text="设置" @click="saveLightingConfig(item)" color="primary"
+                    <v-btn text="设置" @click="saveLightingConfig(device)" color="primary"
                       :disabled="Object.keys(changedConfig).length === 0 || disabledEdit"></v-btn>
                     <v-btn text="关闭" @click="isActive.value = false"></v-btn>
                   </v-card-actions>
@@ -55,7 +55,7 @@
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
 
-const items = ref([
+const devices = ref([
   {
     'Device': '灯泡1',
     'Power': 0,
@@ -108,7 +108,7 @@ async function fetchCardData() {
   try {
     const response = await axios.get('/api/lighting/devices');
     if (response.status === 200) {
-      items.value = response.data;
+      devices.value = response.data;
     } else {
       console.error('Failed to fetch card data:', response.statusText);
     }
@@ -119,30 +119,30 @@ async function fetchCardData() {
   disabledEdit.value = false;
 }
 
-function getLightingState(item) {
-  if (!item.Reachable) {
+function getLightingState(device) {
+  if (!device.Reachable) {
     return '已离线';
   }
-  if (item.Power) {
+  if (device.Power) {
     return '已开启';
   }
   return '已关闭';
 }
 
-async function switchLightingPower(item) {
+async function switchLightingPower(device) {
   disabledEdit.value = true;
   try {
-    var power = Boolean(item.Power)
+    var power = Boolean(device.Power)
     var state = power ? '{"Power": 0}' : '{"Power": 1}';
     
     const response = await axios.get('/api/lighting/setState', {
       params: {
-        device: item.Device,
+        device: device.Device,
         state: state,
       },
     });
     if (response.status === 200) {
-      Object.assign(item, response.data);
+      Object.assign(device, response.data);
       await new Promise(resolve => setTimeout(resolve, 1000));
       fetchCardData();
     } else {
@@ -154,12 +154,12 @@ async function switchLightingPower(item) {
   disabledEdit.value = false;
 }
 
-async function saveLightingConfig(item) {
+async function saveLightingConfig(device) {
   disabledEdit.value = true;
   try {
     const response = await axios.get('/api/lighting/setState', {
       params: {
-        device: item.Device,
+        device: device.Device,
         state: JSON.stringify(changedConfig.value),
       },
     });

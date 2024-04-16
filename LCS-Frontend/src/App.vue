@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-main>
-      <CardList/>
+      <DeviceList/>
       <!-- <ControlPanel /> -->
     </v-main>
   </v-app>
