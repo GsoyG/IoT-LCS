@@ -10,7 +10,7 @@
               <v-col cols="auto">
                 <v-btn :prepend-icon="item.Reachable && Boolean(item.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
                   :color="item.Reachable && Boolean(item.Power) ? 'primary' : ''" variant="tonal" rounded="lg"
-                  @click="switchLightingPower(item)" :disabled="item.disabled || !item.Reachable" stacked>
+                  @click="switchLightingPower(item)" :disabled="disabledEdit || !item.Reachable" stacked>
                   {{ getLightingState(item) }}
                 </v-btn>
               </v-col>
@@ -37,7 +37,7 @@
                   <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn text="设置" @click="saveLightingConfig(item)" color="primary"
-                      :disabled="item.disabled"></v-btn>
+                      :disabled="Object.keys(changedConfig).length === 0 || disabledEdit"></v-btn>
                     <v-btn text="关闭" @click="isActive.value = false"></v-btn>
                   </v-card-actions>
                 </v-card>
@@ -97,12 +97,14 @@ const items = ref([
   }
 ]);
 const changedConfig = ref({});
+const disabledEdit = ref(false);
 
 onMounted(() => {
   fetchCardData();
 });
 
 async function fetchCardData() {
+  disabledEdit.value = true;
   try {
     const response = await axios.get('/api/lighting/devices');
     if (response.status === 200) {
@@ -113,6 +115,8 @@ async function fetchCardData() {
   } catch (error) {
     console.error('Error fetching card data:', error);
   }
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  disabledEdit.value = false;
 }
 
 function getLightingState(item) {
@@ -126,11 +130,11 @@ function getLightingState(item) {
 }
 
 async function switchLightingPower(item) {
+  disabledEdit.value = true;
   try {
     var power = Boolean(item.Power)
     var state = power ? '{"Power": 0}' : '{"Power": 1}';
-
-    item.disabled = true;
+    
     const response = await axios.get('/api/lighting/setState', {
       params: {
         device: item.Device,
@@ -147,13 +151,11 @@ async function switchLightingPower(item) {
   } catch (error) {
     console.error('Error switching lighting power:', error);
   }
-  item.disabled = false;
+  disabledEdit.value = false;
 }
 
 async function saveLightingConfig(item) {
-  if (Object.keys(changedConfig.value).length === 0) return;
-
-  item.disabled = true;
+  disabledEdit.value = true;
   try {
     const response = await axios.get('/api/lighting/setState', {
       params: {
@@ -165,6 +167,6 @@ async function saveLightingConfig(item) {
     console.error('Error saving lighting config:', error);
   }
   changedConfig.value = {};
-  item.disabled = false;
+  disabledEdit.value = false;
 }
 </script>
