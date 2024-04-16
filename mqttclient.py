@@ -34,7 +34,7 @@ class MqttClient:
         self.__hostData['identifier'] = identifier
 
     # 发送消息并返回响应
-    async def send(self, topic, subscribe, message_header, payload = None):
+    async def send(self, command, subscribe, message_header, payload = None):
         if self.__isConnected:
             return "The last request for connection was not closed"
 
@@ -52,6 +52,7 @@ class MqttClient:
             # 发布消息
             if payload is not None:
                 payload = json.dumps(payload).encode('utf-8')
+            topic = 'cmnd/' + self.__gateway_name + '/' + command
             await client.publish(topic, payload)
             
             # 检索响应消息
@@ -68,7 +69,7 @@ class MqttClient:
 
     async def get_device_list(self):
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
-        data = await self.send('cmnd/ZigbeeGateway/ZbInfo', subscribe, 'ZbInfo')
+        data = await self.send('ZbInfo', subscribe, 'ZbInfo')
         if isinstance(data, str):
             return data
 
@@ -84,7 +85,19 @@ class MqttClient:
             'Device': device,
             'Send': state
         }
-        data = await self.send('cmnd/ZigbeeGateway/ZbSend', subscribe, 'ZbReceived', payload)
+        data = await self.send('ZbSend', subscribe, 'ZbReceived', payload)
         if isinstance(data, str):
             return data
         return data[device]
+    
+    # 无需等待响应消息，响应快200%
+    async def set_device_state_fast(self, device, state):
+        subscribe = 'stat/' + self.__gateway_name + '/RESULT'
+        payload = {
+            'Device': device,
+            'Send': state
+        }
+        data = await self.send('ZbSend', subscribe, 'ZbSend', payload)
+        if data != 'Done':
+            return data
+        return { 'status': 'OK'}

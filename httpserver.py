@@ -12,7 +12,8 @@ aiohttp_logger.setLevel(logging.DEBUG)
 class HttpServer:
     app = None
 
-    __interval_length = 1  # 时间间隔，单位：秒
+    __limit_per_interval = 60  # 每个时间间隔允许的最大请求次数
+    __interval_length = 60  # 时间间隔，单位：秒
     __request_counts = deque(maxlen = __interval_length) # 存储请求计数的队列，用于滑动窗口算法
 
     # 中间件
@@ -27,7 +28,8 @@ class HttpServer:
 
         # 计算当前时间间隔内的请求总数
         current_count = sum(1 for _ in filter(lambda t: t >= last_time, self.__request_counts))
-        if current_count >= 1:
+
+        if current_count >= self.__limit_per_interval:
             return web.Response(status = 429, text = "Request count exceeded limit")
 
         # 添加新请求计数

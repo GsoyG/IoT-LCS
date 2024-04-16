@@ -25,7 +25,7 @@ async def get_device_list(request):
 async def set_device_state(request):
     device = request.query['device']
     state = json.loads(request.query['state'])
-    data = await cli.set_device_state(device, state)
+    data = await cli.set_device_state_fast(device, state)
     if isinstance(data, str):
         return web.Response(status = 429, text = data)
     return web.json_response(data)
