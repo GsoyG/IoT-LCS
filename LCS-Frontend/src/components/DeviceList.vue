@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row dense>
-      <v-col v-for="device in devices" cols="12" sm="6" md="4">
+      <v-col v-for="device in deviceList" cols="12" sm="6" md="4">
         <v-card outlined>
           <v-card-title>{{ device.Device }}</v-card-title>
 
@@ -10,8 +10,8 @@
               <v-col cols="auto">
                 <v-btn :prepend-icon="device.Reachable && Boolean(device.Power) ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
                   :color="device.Reachable && Boolean(device.Power) ? 'primary' : ''" variant="tonal" rounded="lg"
-                  @click="switchLightingPower(device)" :disabled="disabledEdit || !device.Reachable" stacked>
-                  {{ getLightingState(device) }}
+                  @click="switchDevicePower(device)" :disabled="disabledEdit || !device.Reachable" stacked>
+                  {{ getStatusText(device) }}
                 </v-btn>
               </v-col>
             </v-row>
@@ -24,20 +24,20 @@
             <v-spacer></v-spacer>
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind="activatorProps" text="编辑" :disabled="!device.Reachable"></v-btn>
+                <v-btn v-bind="activatorProps" text="编辑" :disabled="!device.Reachable"
+                  @click="openEditDialog(device)"></v-btn>
               </template>
 
               <template v-slot:default="{ isActive }">
                 <v-card title="设备编辑">
                   <v-card-text>
-                    <v-slider min="0" max="254" step="1" v-model="device.Dimmer" label="亮度"
-                      @click="changedConfig['Dimmer'] = device.Dimmer"></v-slider>
+                    <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
+                      :disabled="disabledEdit"
+                      @end="uploadDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"></v-slider>
                   </v-card-text>
 
                   <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn text="设置" @click="saveLightingConfig(device)" color="primary"
-                      :disabled="Object.keys(changedConfig).length === 0 || disabledEdit"></v-btn>
                     <v-btn text="关闭" @click="isActive.value = false"></v-btn>
                   </v-card-actions>
                 </v-card>
@@ -55,7 +55,7 @@
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
 
-const devices = ref([
+const deviceList = ref([
   {
     'Device': '灯泡1',
     'Power': 0,
@@ -96,30 +96,14 @@ const devices = ref([
     'LinkQuality': 105
   }
 ]);
-const changedConfig = ref({});
+const deviceConfig = ref({});
 const disabledEdit = ref(false);
 
 onMounted(() => {
-  fetchCardData();
+  fetchDeviceList();
 });
 
-async function fetchCardData() {
-  disabledEdit.value = true;
-  try {
-    const response = await axios.get('/api/lighting/devices');
-    if (response.status === 200) {
-      devices.value = response.data;
-    } else {
-      console.error('Failed to fetch card data:', response.statusText);
-    }
-  } catch (error) {
-    console.error('Error fetching card data:', error);
-  }
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  disabledEdit.value = false;
-}
-
-function getLightingState(device) {
+function getStatusText(device) {
   if (!device.Reachable) {
     return '已离线';
   }
@@ -129,44 +113,66 @@ function getLightingState(device) {
   return '已关闭';
 }
 
-async function switchLightingPower(device) {
+async function fetchDeviceList() {
   disabledEdit.value = true;
   try {
-    var power = Boolean(device.Power)
-    var state = power ? '{"Power": 0}' : '{"Power": 1}';
-    
+    const response = await axios.get('/api/lighting/devices');
+    if (response.status === 200) {
+      deviceList.value = response.data;
+    } else {
+      console.error('Failed to fetch device list:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching device list:', error);
+  }
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  disabledEdit.value = false;
+}
+
+async function uploadDeviceState(device, key, value) {
+  var state = {}
+  state[key] = value;
+
+  disabledEdit.value = true;
+  try {
     const response = await axios.get('/api/lighting/setState', {
       params: {
         device: device.Device,
-        state: state,
+        state: JSON.stringify(state),
       },
     });
     if (response.status === 200) {
       Object.assign(device, response.data);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      fetchCardData();
+      disabledEdit.value = false;
+      return true;
     } else {
-      console.error('Failed to switch lighting power:', response.statusText);
+      console.error('Failed to upload device state:', response.statusText);
     }
   } catch (error) {
-    console.error('Error switching lighting power:', error);
+    console.error('Error uploading device state:', error);
   }
   disabledEdit.value = false;
+  return false;
 }
 
-async function saveLightingConfig(device) {
-  disabledEdit.value = true;
-  try {
-    const response = await axios.get('/api/lighting/setState', {
-      params: {
-        device: device.Device,
-        state: JSON.stringify(changedConfig.value),
-      },
-    });
-  } catch (error) {
-    console.error('Error saving lighting config:', error);
+async function switchDevicePower(device) {
+  if (uploadDeviceState(device, 'Power', +!Boolean(device.Power))) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    fetchDeviceList();
   }
-  changedConfig.value = {};
-  disabledEdit.value = false;
+}
+
+function openEditDialog(device) {
+  deviceConfig.value = {
+    'Dimmer': device.Dimmer,
+    'RGB': device.RGB,
+    'Hue': device.Hue,
+    'Sat': device.Sat,
+    'X': device.X,
+    'Y': device.Y,
+    'CT': device.CT,
+    'ColorMode': device.ColorMode,
+    'RGBb': device.RGBb,
+  };
 }
 </script>
