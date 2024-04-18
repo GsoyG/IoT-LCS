@@ -6,6 +6,7 @@
           <v-card-title>{{ device.Device }}</v-card-title>
 
           <v-card-text>
+            <!-- 设备开关按钮 -->
             <v-row class="pb-8" justify="center">
               <v-col cols="auto">
                 <v-btn :prepend-icon="device.Reachable && device.Dimmer > 1 ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
@@ -16,11 +17,13 @@
               </v-col>
             </v-row>
 
+            <!-- 设备颜色亮度条 -->
             <v-progress-linear :model-value="device.Dimmer / 254 * 100" :color="`#${device.RGB}`" height="20"
               rounded></v-progress-linear>
           </v-card-text>
 
           <v-card-actions>
+            <!-- 设备编辑对话框 -->
             <v-spacer></v-spacer>
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
