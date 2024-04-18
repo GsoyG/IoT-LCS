@@ -37,13 +37,13 @@
                     </v-row>
                     <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
                       :disabled="disabledEdit"
-                      @end="uploadDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"></v-slider>
+                      @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"></v-slider>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Hue" label="色调" :disabled="disabledEdit"
-                      @end="uploadDeviceColor(device, 'Hue', deviceConfig.Hue)"></v-slider>
+                      @end="updateDeviceColor(device, 'Hue', deviceConfig.Hue)"></v-slider>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Sat" label="饱和" :disabled="disabledEdit"
-                      @end="uploadDeviceColor(device, 'Sat', deviceConfig.Sat)"></v-slider>
+                      @end="updateDeviceColor(device, 'Sat', deviceConfig.Sat)"></v-slider>
                     <v-slider min="0" max="500" step="1" v-model="deviceConfig.CT" label="色温" :disabled="disabledEdit"
-                      @end="uploadDeviceColor(device, 'CT', deviceConfig.CT)"></v-slider>
+                      @end="updateDeviceColor(device, 'CT', deviceConfig.CT)"></v-slider>
                   </v-card-text>
 
                   <v-card-actions>
@@ -113,6 +113,7 @@ onMounted(() => {
   fetchDeviceList();
 });
 
+// 得到设备状态文字
 function getStatusText(device) {
   if (!device.Reachable) {
     return '已离线';
@@ -123,6 +124,7 @@ function getStatusText(device) {
   return '已关闭';
 }
 
+// 获取设备列表
 async function fetchDeviceList() {
   disabledEdit.value = true;
   try {
@@ -137,6 +139,7 @@ async function fetchDeviceList() {
   }
   disabledEdit.value = false;
 
+  // 检查设备照明模式
   deviceList.value.forEach(device => {
     if (device.ColorMode == 2) {
       device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3);
@@ -144,7 +147,8 @@ async function fetchDeviceList() {
   });
 }
 
-async function uploadDeviceState(device, key, value, disabled = true) {
+// 更新设备状态信息
+async function updateDeviceState(device, key, value, disabled = true) {
   var state = {}
   state[key] = value;
 
@@ -172,6 +176,7 @@ async function uploadDeviceState(device, key, value, disabled = true) {
   return false;
 }
 
+// 颜色转换辅助方法
 function hueToRgb(p, q, t) {
   if (t < 0) t += 1;
   if (t > 1) t -= 1;
@@ -192,7 +197,8 @@ function hslToRgb(h, s, l) {
   return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
-async function uploadDeviceColor(device, key, value) {
+// 更新设备颜色信息
+async function updateDeviceColor(device, key, value) {
   let rgb = 'FFFFFF';
   if (key != 'CT') {
     rgb = hslToRgb(deviceConfig.value.Hue / 254, 1, 1 - deviceConfig.value.Sat / 254 / 2);
@@ -200,22 +206,25 @@ async function uploadDeviceColor(device, key, value) {
   else rgb = hslToRgb(0.083, 1, 1 - value / 500 * 0.3);
 
   deviceConfig.value.RGB = rgb;
-  if (await uploadDeviceState(device, key, value)) {
+  if (await updateDeviceState(device, key, value)) {
     device.RGB = rgb;
   }
 }
 
+// 切换设备开关状态
 async function switchDevicePower(device) {
   var power = device.Dimmer > 1 ? 0 : 1
   disabledEdit.value = true;
 
-  if (await uploadDeviceState(device, 'Power', power, false)) {
+  // 切换后等待获取到设备最新状态后，获取最新状态列表
+  if (await updateDeviceState(device, 'Power', power, false)) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     fetchDeviceList();
   }
   disabledEdit.value = false;
 }
 
+// 打开设备编辑对话框
 function openEditDialog(device) {
   deviceConfig.value = {
     'Dimmer': device.Dimmer,
