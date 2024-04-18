@@ -10,7 +10,7 @@
             <v-row class="pb-8" justify="center">
               <v-col cols="auto">
                 <v-btn :prepend-icon="device.Reachable && device.Dimmer > 1 ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
-                  :color="device.Reachable && device.Dimmer > 1 ? 'primary' : ''" variant="tonal" rounded="lg"
+                  :color="device.Reachable && device.Dimmer > 1 ? '#' + device.RGB : ''" variant="tonal" rounded="lg"
                   @click="switchDevicePower(device)" :disabled="disabledEdit || !device.Reachable" stacked>
                   {{ getStatusText(device) }}
                 </v-btn>

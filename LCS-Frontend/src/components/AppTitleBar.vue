@@ -1,6 +1,6 @@
 <template>
   <!-- 顶部标题栏 -->
-  <v-app-bar :elevation="2">
+  <v-app-bar color="indigo">
     <!-- 抽屉图标 -->
     <template v-slot:prepend>
       <v-app-bar-nav-icon @click.stop="rail = !rail"></v-app-bar-nav-icon>
