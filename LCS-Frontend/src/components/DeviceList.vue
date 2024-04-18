@@ -136,6 +136,12 @@ async function fetchDeviceList() {
     console.error('Error fetching device list:', error);
   }
   disabledEdit.value = false;
+
+  deviceList.value.forEach(device => {
+    if (device.ColorMode == 2) {
+      device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3);
+    }
+  });
 }
 
 async function uploadDeviceState(device, key, value, disabled = true) {
