@@ -33,7 +33,7 @@
                   <v-card-text>
                     <v-row class="pb-8" justify="center">
                       <v-col cols="auto"
-                        :style="`width: 100px; height: 100px; background: #${getConfigColor(deviceConfig)}; border-radius: 20px;`"></v-col>
+                        :style="`width: 100px; height: 100px; background: #${deviceConfig.RGB}; border-radius: 20px;`"></v-col>
                     </v-row>
                     <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
                       :disabled="disabledEdit"
@@ -42,6 +42,8 @@
                       @end="uploadDeviceColor(device, 'Hue', deviceConfig.Hue)"></v-slider>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Sat" label="饱和" :disabled="disabledEdit"
                       @end="uploadDeviceColor(device, 'Sat', deviceConfig.Sat)"></v-slider>
+                    <v-slider min="0" max="500" step="1" v-model="deviceConfig.CT" label="色温" :disabled="disabledEdit"
+                      @end="uploadDeviceColor(device, 'CT', deviceConfig.CT)"></v-slider>
                   </v-card-text>
 
                   <v-card-actions>
@@ -121,31 +123,6 @@ function getStatusText(device) {
   return '已关闭';
 }
 
-function hueToRgb(p, q, t) {
-  if (t < 0) t += 1;
-  if (t > 1) t -= 1;
-  if (t < 1 / 6) return p + (q - p) * 6 * t;
-  if (t < 1 / 2) return q;
-  if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-  return p;
-}
-function getConfigColor(deviceConfig) {
-  let h, s, l;
-  h = deviceConfig.Hue / 254;
-  s = 1;
-  l = 1 - deviceConfig.Sat / 254 / 2;
-
-  let r, g, b;
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-
-  r = Math.round(hueToRgb(p, q, h + 1 / 3) * 255);
-  g = Math.round(hueToRgb(p, q, h) * 255);
-  b = Math.round(hueToRgb(p, q, h - 1 / 3) * 255);
-
-  return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
-
 async function fetchDeviceList() {
   disabledEdit.value = true;
   try {
@@ -189,9 +166,36 @@ async function uploadDeviceState(device, key, value, disabled = true) {
   return false;
 }
 
+function hueToRgb(p, q, t) {
+  if (t < 0) t += 1;
+  if (t > 1) t -= 1;
+  if (t < 1 / 6) return p + (q - p) * 6 * t;
+  if (t < 1 / 2) return q;
+  if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+  return p;
+}
+function hslToRgb(h, s, l) {
+  let r, g, b;
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+
+  r = Math.round(hueToRgb(p, q, h + 1 / 3) * 255);
+  g = Math.round(hueToRgb(p, q, h) * 255);
+  b = Math.round(hueToRgb(p, q, h - 1 / 3) * 255);
+
+  return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
 async function uploadDeviceColor(device, key, value) {
+  let rgb = 'FFFFFF';
+  if (key != 'CT') {
+    rgb = hslToRgb(deviceConfig.value.Hue / 254, 1, 1 - deviceConfig.value.Sat / 254 / 2);
+  }
+  else rgb = hslToRgb(0.083, 1, 1 - value / 500 * 0.3);
+
+  deviceConfig.value.RGB = rgb;
   if (await uploadDeviceState(device, key, value)) {
-    device.RGB = getConfigColor(deviceConfig.value);
+    device.RGB = rgb;
   }
 }
 
