@@ -1,8 +1,8 @@
 <template>
   <v-app>
     <v-main>
+      <AppTitleBar/>
       <DeviceList/>
-      <!-- <ControlPanel /> -->
     </v-main>
   </v-app>
 </template>
