@@ -27,7 +27,7 @@
             <v-spacer></v-spacer>
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind="activatorProps" text="编辑" :disabled="!device.Reachable"
+                <v-btn v-bind="activatorProps" icon="mdi-square-edit-outline" :disabled="!device.Reachable"
                   @click="openEditDialog(device)"></v-btn>
               </template>
 
@@ -61,6 +61,8 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <v-btn icon="mdi-plus" size="large" color="indigo" style="position: fixed; bottom: 40px; right: 50px;"></v-btn>
   </v-container>
 </template>
 
