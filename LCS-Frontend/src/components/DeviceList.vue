@@ -1,5 +1,9 @@
 <template>
   <v-container>
+    <div class="d-flex flex-column fill-height justify-center align-center text-white" v-if="deviceList.length === 0">
+      <h1 class="text-h4 font-weight-thin my-8">未查询到设备</h1>
+      <h3 class="subheading">{{ emptyInfo }}</h3>
+    </div>
     <v-row dense>
       <v-col v-for="device in deviceList" cols="12" sm="6" md="4">
         <v-card outlined>
@@ -70,49 +74,10 @@
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
 
-const deviceList = ref([
-  {
-    'Device': '灯泡1',
-    'Power': 0,
-    'Dimmer': 20,
-    'RGB': 'FF5722',
-  },
-  {
-    'Device': '灯泡2',
-    'Power': 1,
-    'Dimmer': 50,
-    'RGB': '4CAF50',
-  },
-  {
-    'Device': '0xA821',
-    'IEEEAddr': '0xA4C138727417E5E1',
-    'ModelId': 'TS0505B',
-    'Manufacturer': '_TZ3210_mja6r5ix',
-    'Endpoints': [
-      1
-    ],
-    'Config': [
-      'O01',
-      'L01'
-    ],
-    'Power': 1,
-    'Dimmer': 10,
-    'Hue': 0,
-    'Sat': 250,
-    'X': 10040,
-    'Y': 3116,
-    'CT': 0,
-    'ColorMode': 2,
-    'RGB': 'FF0404',
-    'RGBb': '0A0000',
-    'Reachable': false,
-    'LastSeen': 144544,
-    'LastSeenEpoch': 1712682096,
-    'LinkQuality': 105
-  }
-]);
+const deviceList = ref([]);
 const deviceConfig = ref({});
 const disabledEdit = ref(false);
+const emptyInfo = ref('');
 
 onMounted(() => {
   fetchDeviceList();
@@ -133,23 +98,26 @@ function getStatusText(device) {
 async function fetchDeviceList() {
   disabledEdit.value = true;
   try {
-    const response = await axios.get('/api/lighting/devices');
+    const response = await axios.get('/api/lighting/devices', { timeout: 4000 });
     if (response.status === 200) {
       deviceList.value = response.data;
+
+      // 检查设备照明模式
+      deviceList.value.forEach(device => {
+        if (device.ColorMode == 2) {
+          device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3);
+        }
+      });
+      emptyInfo.value = '未绑定设备，请点击右下角添加';
     } else {
       console.error('Failed to fetch device list:', response.statusText);
+      emptyInfo.value = '网关连接出错，请检查网关设备';
     }
   } catch (error) {
     console.error('Error fetching device list:', error);
+    emptyInfo.value = '网关连接出错，请检查网关设备或网络连接';
   }
   disabledEdit.value = false;
-
-  // 检查设备照明模式
-  deviceList.value.forEach(device => {
-    if (device.ColorMode == 2) {
-      device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3);
-    }
-  });
 }
 
 // 更新设备状态信息
