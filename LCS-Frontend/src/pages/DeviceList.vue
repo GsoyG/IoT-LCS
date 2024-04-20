@@ -10,7 +10,7 @@
         <v-card outlined>
           <v-card-title>{{ device.Device }}</v-card-title>
 
-          <v-card-text>
+          <div class="mx-4">
             <!-- 设备开关按钮 -->
             <v-row class="pb-8" justify="center">
               <v-col cols="auto">
@@ -25,7 +25,7 @@
             <!-- 设备颜色亮度条 -->
             <v-progress-linear :model-value="device.Dimmer / 254 * 100" :color="`#${device.RGB}`" height="20"
               rounded></v-progress-linear>
-          </v-card-text>
+          </div>
 
           <v-card-actions>
             <!-- 设备编辑对话框 -->
@@ -38,11 +38,11 @@
 
               <template v-slot:default="{ isActive }">
                 <v-card title="设备编辑">
-                  <v-card-text>
-                    <v-row class="pb-8" justify="center">
+                  <div class="mx-4">
+                    <div class="d-flex justify-center my-2">
                       <v-col cols="auto"
                         :style="`width: 100px; height: 100px; background: #${deviceConfig.RGB}; border-radius: 20px;`"></v-col>
-                    </v-row>
+                    </div>
                     <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
                       :disabled="disabledEdit"
                       @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"></v-slider>
@@ -52,7 +52,7 @@
                       @end="updateDeviceColor(device, 'Sat', deviceConfig.Sat)"></v-slider>
                     <v-slider min="0" max="500" step="1" v-model="deviceConfig.CT" label="色温" :disabled="disabledEdit"
                       @end="updateDeviceColor(device, 'CT', deviceConfig.CT)"></v-slider>
-                  </v-card-text>
+                  </div>
 
                   <v-card-actions>
                     <v-spacer></v-spacer>
