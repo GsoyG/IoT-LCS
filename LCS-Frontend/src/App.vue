@@ -10,10 +10,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import DeviceList from './pages/DeviceList.vue'
+import TimingTask from './pages/TimingTask.vue'
 import NotFound from './pages/NotFound.vue'
 
 const routes = {
-  '/': DeviceList
+  '/': DeviceList,
+  '/device': DeviceList,
+  '/timing': TimingTask,
 }
 
 const currentPath = ref(window.location.hash)
