@@ -9,7 +9,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import DeviceList from './pages/device/DeviceList.vue'
+import DeviceList from './pages/DeviceList.vue'
 import NotFound from './pages/NotFound.vue'
 
 const routes = {
