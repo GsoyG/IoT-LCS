@@ -1,8 +1,9 @@
 <template>
   <v-container>
     <div class="d-flex flex-column fill-height justify-center align-center" v-if="deviceList.length === 0">
-      <h1 class="text-h4 font-weight-thin my-8">未查询到设备</h1>
-      <h3 class="subheading">{{ emptyInfo }}</h3>
+      <h1 class="text-h4 font-weight-thin my-8">{{ emptyInfo.heading }}</h1>
+      <h3 class="subheading">{{ emptyInfo.subheading }}</h3>
+      <v-progress-circular indeterminate size="70" width="7" v-if="emptyInfo.subheading === ''"></v-progress-circular>
     </div>
     <v-row dense>
       <v-col v-for="device in deviceList" cols="12" sm="6" md="4">
@@ -77,7 +78,10 @@ import { ref, onMounted } from 'vue'
 const deviceList = ref([])
 const deviceConfig = ref({})
 const disabledEdit = ref(false)
-const emptyInfo = ref('')
+const emptyInfo = ref({
+  'heading': '查询设备中......',
+  'subheading': ''
+})
 
 onMounted(() => {
   fetchDeviceList()
@@ -108,14 +112,25 @@ async function fetchDeviceList() {
           device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3)
         }
       })
-      emptyInfo.value = '未绑定设备，请点击右下角添加'
+      if (deviceList.value.length === 0) {
+        emptyInfo.value = {
+          'heading': '未查询到设备',
+          'subheading': '未绑定设备，请点击右下角添加'
+        }
+      }
     } else {
       console.error('Failed to fetch device list:', response.statusText)
-      emptyInfo.value = '网关连接出错，请检查网关设备'
+      emptyInfo.value = {
+        'heading': '未查询到设备',
+        'subheading': '网关连接出错，请检查网关设备'
+      }
     }
   } catch (error) {
     console.error('Error fetching device list:', error)
-    emptyInfo.value = '网关连接出错，请检查网关设备或网络连接'
+    emptyInfo.value = {
+      'heading': '未查询到设备',
+      'subheading': '网关连接出错，请检查网关设备或网络连接'
+    }
   }
   disabledEdit.value = false
 }
