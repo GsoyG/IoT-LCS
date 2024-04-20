@@ -55,13 +55,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 const userData = ref({
   'user': 'Gsoy',
   'qq': '2754205302',
   'email': 'GsoyG@icloud.com',
-});
-const drawer = ref(true);
-const rail = ref(false);
+})
+const drawer = ref(true)
+const rail = ref(false)
 </script>

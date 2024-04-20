@@ -71,130 +71,130 @@
 </template>
 
 <script setup>
-import axios from 'axios';
-import { ref, onMounted } from 'vue';
+import axios from 'axios'
+import { ref, onMounted } from 'vue'
 
-const deviceList = ref([]);
-const deviceConfig = ref({});
-const disabledEdit = ref(false);
-const emptyInfo = ref('');
+const deviceList = ref([])
+const deviceConfig = ref({})
+const disabledEdit = ref(false)
+const emptyInfo = ref('')
 
 onMounted(() => {
-  fetchDeviceList();
-});
+  fetchDeviceList()
+})
 
 // 得到设备状态文字
 function getStatusText(device) {
   if (!device.Reachable) {
-    return '已离线';
+    return '已离线'
   }
   if (device.Dimmer > 1) {
-    return '已开启';
+    return '已开启'
   }
-  return '已关闭';
+  return '已关闭'
 }
 
 // 获取设备列表
 async function fetchDeviceList() {
-  disabledEdit.value = true;
+  disabledEdit.value = true
   try {
-    const response = await axios.get('/api/lighting/devices', { timeout: 4000 });
+    const response = await axios.get('/api/lighting/devices', { timeout: 4000 })
     if (response.status === 200) {
-      deviceList.value = response.data;
+      deviceList.value = response.data
 
       // 检查设备照明模式
       deviceList.value.forEach(device => {
         if (device.ColorMode == 2) {
-          device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3);
+          device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3)
         }
-      });
-      emptyInfo.value = '未绑定设备，请点击右下角添加';
+      })
+      emptyInfo.value = '未绑定设备，请点击右下角添加'
     } else {
-      console.error('Failed to fetch device list:', response.statusText);
-      emptyInfo.value = '网关连接出错，请检查网关设备';
+      console.error('Failed to fetch device list:', response.statusText)
+      emptyInfo.value = '网关连接出错，请检查网关设备'
     }
   } catch (error) {
-    console.error('Error fetching device list:', error);
-    emptyInfo.value = '网关连接出错，请检查网关设备或网络连接';
+    console.error('Error fetching device list:', error)
+    emptyInfo.value = '网关连接出错，请检查网关设备或网络连接'
   }
-  disabledEdit.value = false;
+  disabledEdit.value = false
 }
 
 // 更新设备状态信息
 async function updateDeviceState(device, key, value, disabled = true) {
   var state = {}
-  state[key] = value;
+  state[key] = value
 
-  if (disabled) disabledEdit.value = true;
+  if (disabled) disabledEdit.value = true
   try {
     const response = await axios.get('/api/lighting/setState', {
       params: {
         device: device.Device,
         state: JSON.stringify(state),
       },
-    });
+    })
     if (response.status === 200) {
-      Object.assign(device, state);
+      Object.assign(device, state)
 
-      if (disabled) disabledEdit.value = false;
-      return true;
+      if (disabled) disabledEdit.value = false
+      return true
     } else {
-      console.error('Failed to upload device state:', response.statusText);
+      console.error('Failed to upload device state:', response.statusText)
     }
   } catch (error) {
-    console.error('Error uploading device state:', error);
+    console.error('Error uploading device state:', error)
   }
 
-  if (disabled) disabledEdit.value = false;
-  return false;
+  if (disabled) disabledEdit.value = false
+  return false
 }
 
 // 颜色转换辅助方法
 function hueToRgb(p, q, t) {
-  if (t < 0) t += 1;
-  if (t > 1) t -= 1;
-  if (t < 1 / 6) return p + (q - p) * 6 * t;
-  if (t < 1 / 2) return q;
-  if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-  return p;
+  if (t < 0) t += 1
+  if (t > 1) t -= 1
+  if (t < 1 / 6) return p + (q - p) * 6 * t
+  if (t < 1 / 2) return q
+  if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+  return p
 }
 function hslToRgb(h, s, l) {
-  let r, g, b;
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
+  let r, g, b
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+  const p = 2 * l - q
 
-  r = Math.round(hueToRgb(p, q, h + 1 / 3) * 255);
-  g = Math.round(hueToRgb(p, q, h) * 255);
-  b = Math.round(hueToRgb(p, q, h - 1 / 3) * 255);
+  r = Math.round(hueToRgb(p, q, h + 1 / 3) * 255)
+  g = Math.round(hueToRgb(p, q, h) * 255)
+  b = Math.round(hueToRgb(p, q, h - 1 / 3) * 255)
 
-  return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
 }
 
 // 更新设备颜色信息
 async function updateDeviceColor(device, key, value) {
-  let rgb = 'FFFFFF';
+  let rgb = 'FFFFFF'
   if (key != 'CT') {
-    rgb = hslToRgb(deviceConfig.value.Hue / 254, 1, 1 - deviceConfig.value.Sat / 254 / 2);
+    rgb = hslToRgb(deviceConfig.value.Hue / 254, 1, 1 - deviceConfig.value.Sat / 254 / 2)
   }
-  else rgb = hslToRgb(0.083, 1, 1 - value / 500 * 0.3);
+  else rgb = hslToRgb(0.083, 1, 1 - value / 500 * 0.3)
 
-  deviceConfig.value.RGB = rgb;
+  deviceConfig.value.RGB = rgb
   if (await updateDeviceState(device, key, value)) {
-    device.RGB = rgb;
+    device.RGB = rgb
   }
 }
 
 // 切换设备开关状态
 async function switchDevicePower(device) {
   var power = device.Dimmer > 1 ? 0 : 1
-  disabledEdit.value = true;
+  disabledEdit.value = true
 
   // 切换后等待获取到设备最新状态后，获取最新状态列表
   if (await updateDeviceState(device, 'Power', power, false)) {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    fetchDeviceList();
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    fetchDeviceList()
   }
-  disabledEdit.value = false;
+  disabledEdit.value = false
 }
 
 // 打开设备编辑对话框
@@ -209,6 +209,6 @@ function openEditDialog(device) {
     'CT': device.CT,
     'ColorMode': device.ColorMode,
     'RGBb': device.RGBb,
-  };
+  }
 }
 </script>
