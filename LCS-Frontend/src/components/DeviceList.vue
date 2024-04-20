@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <div class="d-flex flex-column fill-height justify-center align-center text-white" v-if="deviceList.length === 0">
+    <div class="d-flex flex-column fill-height justify-center align-center" v-if="deviceList.length === 0">
       <h1 class="text-h4 font-weight-thin my-8">未查询到设备</h1>
       <h3 class="subheading">{{ emptyInfo }}</h3>
     </div>
