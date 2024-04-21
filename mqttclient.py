@@ -36,7 +36,7 @@ class MqttClient:
     # 发送消息并返回响应
     async def send(self, command, subscribe, message_header, payload = None):
         if self.__isConnected:
-            return "The last request for connection was not closed"
+            return "上一个请求的连接未关闭"
 
         async with aiomqtt.Client(
             self.__hostData['hostname'],
@@ -65,7 +65,7 @@ class MqttClient:
                             return parsed_msg[message_header]
             except asyncio.TimeoutError:
                 self.__isConnected = False
-            return "Request waiting for response timeout"
+            return "等待请求响应超时"
 
     # 获取设备列表
     async def get_device_list(self):

@@ -30,7 +30,7 @@ class HttpServer:
         current_count = sum(1 for _ in filter(lambda t: t >= last_time, self.__request_counts))
 
         if current_count >= self.__limit_per_interval:
-            return web.Response(status = 429, text = "Request count exceeded limit")
+            return web.Response(status = 429, text = "单位次数内请求次数过多")
 
         # 添加新请求计数
         self.__request_counts.append(current_time)

@@ -29,7 +29,7 @@ async def set_device_state(request):
         device = request.query['device']
         state = json.loads(request.query['state'])
     except KeyError:
-        return web.Response(status = 400, text = 'parameter error')
+        return web.Response(status = 400, text = '参数错误：找不到指定参数')
     
     # 设置设备状态
     data = await cli.set_device_state_fast(device, state)
@@ -47,23 +47,23 @@ async def set_timing_task(request):
         action = request.query['action']
         data = json.loads(request.query['data'])
     except KeyError:
-        return web.Response(status = 400, text = 'parameter error')
+        return web.Response(status = 400, text = '参数错误：找不到指定参数')
     
     # 操作定时任务项
     if action == 'add':
         if db.checkItem('TimingTask', 'name', data['name']):
-            return web.Response(status = 400, text = 'name already exists')
+            return web.Response(status = 400, text = '定时任务名称重复')
         db.addItem('TimingTask', data)
     elif action == 'delete':
         if not db.checkItem('TimingTask', 'name', data['name']):
-            return web.Response(status = 400, text = 'name not exists')
+            return web.Response(status = 400, text = '定时任务名称不存在')
         db.deleteItem('TimingTask', 'name', data['name'])
     elif action == 'update':
         if not db.checkItem('TimingTask', 'name', data['name']):
-            return web.Response(status = 400, text = 'name not exists')
+            return web.Response(status = 400, text = '定时任务名称不存在')
         db.updateItem('TimingTask', 'name', data)
     else:
-        return web.Response(status = 400, text = 'parameter error')
+        return web.Response(status = 400, text = '参数错误：未知参数')
     return web.json_response({ 'status': 'OK'})
 
 if __name__ == '__main__':
