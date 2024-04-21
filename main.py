@@ -55,8 +55,12 @@ async def set_timing_task(request):
             return web.Response(status = 400, text = 'name already exists')
         db.addItem('TimingTask', data)
     elif action == 'delete':
+        if not db.checkItem('TimingTask', 'name', data['name']):
+            return web.Response(status = 400, text = 'name not exists')
         db.deleteItem('TimingTask', 'name', data['name'])
     elif action == 'update':
+        if not db.checkItem('TimingTask', 'name', data['name']):
+            return web.Response(status = 400, text = 'name not exists')
         db.updateItem('TimingTask', 'name', data)
     else:
         return web.Response(status = 400, text = 'parameter error')
