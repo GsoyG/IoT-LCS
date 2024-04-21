@@ -114,6 +114,12 @@
         </v-card>
       </template>
     </v-dialog>
+
+    <!-- 提示消息条 -->
+    <v-snackbar timeout="2000" v-model="snackbarConfig.show" color="indigo">
+      <v-icon :icon="snackbarConfig.icon" :color="snackbarConfig.iconColor" class="mr-2"></v-icon>
+      {{ snackbarConfig.text }}
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -141,6 +147,16 @@ const taskConfig = ref({
     'key': '',
     'value': ''
   },
+})
+const snackbarConfig = ref({
+  'show': false,
+  'text': '',
+  'icon': '',
+  'iconColor': '',
+})
+
+onMounted(() => {
+  fetchTaskList()
 })
 
 // 获取重复文本
@@ -183,22 +199,25 @@ function getActionText(action) {
   return text
 }
 
-onMounted(() => {
-  fetchTaskList()
-})
+// 显示提示消息条
+function showMessage(text, icon, iconColor) {
+  snackbarConfig.value = {
+    show: true,
+    text: text,
+    icon: 'mdi-' + icon,
+    iconColor: iconColor,
+  }
+}
 
 // 获取定时任务列表
 async function fetchTaskList() {
-  try {
-    const response = await axios.get('/api/timing/tasks')
-    if (response.status === 200) {
-      taskList.value = response.data
-    } else {
-      console.error('Failed to fetch timing task list:', response.statusText)
-    }
-  } catch (error) {
-    console.error('Error fetching timing task list:', error)
-  }
+  await axios.get('/api/timing/tasks').then(response => {
+    taskList.value = response.data
+  }).catch(error => {
+    if (error.response)
+      showMessage('获取任务列表失败：' + error.response.data, 'alert-circle', 'red')
+    else showMessage('获取任务列表出错：' + error.message, 'alert-circle', 'red')
+  })
 }
 
 // 更新定时任务，更新或添加
@@ -222,47 +241,42 @@ async function updateTask(isExisting) {
   else data.action[actionText[taskConfig.value.action.key]] = taskConfig.value.action.value
 
   // 发送添加请求
-  try {
-    const response = await axios.get('/api/timing/setTask', {
-      params: {
-        action: isExisting ? 'update' : 'add',
-        data: JSON.stringify(data)
-      }
-    })
-    if (response.status === 200) {
-      fetchTaskList()
-    } else {
-      console.error('Failed to fetch timing task list:', response.statusText)
+  await axios.get('/api/timing/setTask', {
+    params: {
+      action: isExisting ? 'update' : 'add',
+      data: JSON.stringify(data)
     }
-  } catch (error) {
-    console.error('Error fetching timing task list:', error)
-  }
+  }).then(response => {
+    showMessage('添加任务成功', 'check-circle', 'green')
+    fetchTaskList()
+  }).catch(error => {
+    if (error.response)
+      showMessage('添加任务失败：' + error.response.data, 'alert-circle', 'red')
+    else showMessage('添加任务出错：' + error.message, 'alert-circle', 'red')
+  });
 }
 
 // 删除定时任务
 async function deleteTask(name) {
-  try {
-    const response = await axios.get('/api/timing/setTask', {
-      params: {
-        action: 'delete',
-        data: JSON.stringify({
-          name: name
-        })
-      }
-    })
-    if (response.status === 200) {
-      fetchTaskList()
-    } else {
-      console.error('Failed to delete timing task list:', response.statusText)
+  const response = await axios.get('/api/timing/setTask', {
+    params: {
+      action: 'delete',
+      data: JSON.stringify({
+        name: name
+      })
     }
-  } catch (error) {
-    console.error('Error deleting timing task list:', error)
-  }
+  }).then(response => {
+    showMessage('删除任务成功', 'check-circle', 'green')
+    fetchTaskList()
+  }).catch(error => {
+    if (error.response)
+      showMessage('删除任务失败：' + error.response.data, 'alert-circle', 'red')
+    else showMessage('删除任务出错：' + error.message, 'alert-circle', 'red')
+  })
 }
 
 // 打开编辑定时任务对话框
 async function editTask(config) {
-  console.log(config)
   taskConfig.value = {
     'name': config.name,
     'devices': [],
