@@ -3,7 +3,8 @@
     <div class="d-flex flex-column fill-height justify-center align-center" v-if="deviceList.length === 0">
       <h1 class="text-h4 font-weight-thin my-8">{{ emptyInfo.heading }}</h1>
       <h3 class="subheading">{{ emptyInfo.subheading }}</h3>
-      <v-progress-circular indeterminate size="70" width="7" v-if="emptyInfo.subheading === ''"></v-progress-circular>
+      <v-progress-circular color="indigo" indeterminate size="70" width="7"
+        v-if="emptyInfo.subheading === ''"></v-progress-circular>
     </div>
     <v-row dense>
       <v-col v-for="device in deviceList" cols="12" sm="6" md="4">
@@ -32,8 +33,8 @@
             <v-spacer></v-spacer>
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind="activatorProps" icon="mdi-square-edit-outline" :disabled="!device.Reachable"
-                  @click="openEditDialog(device)"></v-btn>
+                <v-btn v-bind="activatorProps" color="indigo-accent-2" icon="mdi-square-edit-outline"
+                  :disabled="!device.Reachable" @click="openEditDialog(device)"></v-btn>
               </template>
 
               <template v-slot:default="{ isActive }">

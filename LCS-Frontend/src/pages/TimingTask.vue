@@ -22,7 +22,7 @@
             <v-spacer></v-spacer>
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind="activatorProps" icon="mdi-square-edit-outline"></v-btn>
+                <v-btn v-bind="activatorProps" color="indigo-accent-2" icon="mdi-square-edit-outline"></v-btn>
               </template>
 
               <template v-slot:default="{ isActive }">
@@ -60,8 +60,7 @@
             <v-divider class="mb-4"></v-divider>
             <v-row dense>
               <v-col cols="12" sm="4">
-                <v-text-field v-model="taskConfig.time" label="时间"
-                  type="time"></v-text-field>
+                <v-text-field v-model="taskConfig.time" label="时间" type="time"></v-text-field>
               </v-col>
               <v-col cols="12" sm="4">
                 <v-select v-model="taskConfig.action.key" :items="['电源', '亮度']" label="操作"></v-select>
@@ -189,6 +188,7 @@ async function addTask() {
     data.action['Power'] = taskConfig.value.action.value === '开' ? 1 : 0
   else data.action[actionText[taskConfig.value.action.key]] = taskConfig.value.action.value
 
+  // 发送添加请求
   try {
     const response = await axios.get('/api/timing/setTask', {
       params: {
