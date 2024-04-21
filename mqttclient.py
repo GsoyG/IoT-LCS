@@ -67,18 +67,20 @@ class MqttClient:
                 self.__isConnected = False
             return "Request waiting for response timeout"
 
+    # 获取设备列表
     async def get_device_list(self):
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
         data = await self.send('ZbInfo', subscribe, 'ZbInfo')
         if isinstance(data, str):
             return data
 
-        # 更新设备列表
+        # 更新本地设备列表
         self.__device_list.clear()
         for key, value in data.items():
             self.__device_list.append(value)
         return self.__device_list
     
+    # 设置设备状态信息
     async def set_device_state(self, device, state):
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
         payload = {
@@ -90,7 +92,7 @@ class MqttClient:
             return data
         return data[device]
     
-    # 无需等待响应消息，响应快200%
+    # 设置设备状态信息，无需等待响应消息，响应快两倍
     async def set_device_state_fast(self, device, state):
         subscribe = 'stat/' + self.__gateway_name + '/RESULT'
         payload = {
