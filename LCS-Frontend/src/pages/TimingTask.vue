@@ -18,8 +18,25 @@
           </div>
 
           <v-card-actions>
-            <!-- 定时任务编辑对话框 -->
+            <!-- 删除对话框 -->
+            <v-dialog max-width="400">
+              <template v-slot:activator="{ props: activatorProps }">
+                <v-btn v-bind="activatorProps" color="red" icon="mdi-delete-outline"></v-btn>
+              </template>
+
+              <template v-slot:default="{ isActive }">
+                <v-card title="删除定时任务" text="确定删除此定时任务吗？此操作将不可恢复。">
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text="确认" color="red" @click="deleteTask(task.name)"></v-btn>
+                    <v-btn text="取消" @click="isActive.value = false"></v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
+
             <v-spacer></v-spacer>
+            <!-- 编辑对话框 -->
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
                 <v-btn v-bind="activatorProps" color="indigo-accent-2" icon="mdi-square-edit-outline"></v-btn>
@@ -43,7 +60,7 @@
       </v-col>
     </v-row>
 
-    <!-- 定时任务添加对话框 -->
+    <!-- 添加对话框 -->
     <v-dialog max-width="500">
       <template v-slot:activator="{ props: activatorProps }">
         <v-btn v-bind="activatorProps" icon="mdi-plus" size="large" color="indigo"
@@ -178,12 +195,10 @@ async function addTask() {
   }
   const days = {'周一': 0, '周二': 1, '周三': 2, '周四': 3, '周五': 4, '周六': 5, '周日': 6 }
   const actionText = { '电源': 'Power', '亮度': 'Dimmer', '色调': 'Hue', '饱和度': 'Sat', '色温': 'CT' }
-  for (let i = 0; i < taskConfig.value.devices.length; i++) {
+  for (let i = 0; i < taskConfig.value.devices.length; i++)
     data.devices.push(taskConfig.value.devices[i])
-  }
-  for (let i = 0; i < taskConfig.value.repeat.length; i++) {
+  for (let i = 0; i < taskConfig.value.repeat.length; i++)
     data.repeat.push(days[taskConfig.value.repeat[i]])
-  }
   if (taskConfig.value.action.key === '电源')
     data.action['Power'] = taskConfig.value.action.value === '开' ? 1 : 0
   else data.action[actionText[taskConfig.value.action.key]] = taskConfig.value.action.value
@@ -203,6 +218,27 @@ async function addTask() {
     }
   } catch (error) {
     console.error('Error fetching timing task list:', error)
+  }
+}
+
+// 删除定时任务
+async function deleteTask(name) {
+  try {
+    const response = await axios.get('/api/timing/setTask', {
+      params: {
+        action: 'delete',
+        data: JSON.stringify({
+          name: name
+        })
+      }
+    })
+    if (response.status === 200) {
+      fetchTaskList()
+    } else {
+      console.error('Failed to delete timing task list:', response.statusText)
+    }
+  } catch (error) {
+    console.error('Error deleting timing task list:', error)
   }
 }
 </script>

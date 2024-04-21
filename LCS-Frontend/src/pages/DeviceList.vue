@@ -29,7 +29,7 @@
           </div>
 
           <v-card-actions>
-            <!-- 设备编辑对话框 -->
+            <!-- 编辑对话框 -->
             <v-spacer></v-spacer>
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
