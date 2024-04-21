@@ -39,16 +39,34 @@
             <!-- 编辑对话框 -->
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind="activatorProps" color="indigo-accent-2" icon="mdi-square-edit-outline"></v-btn>
+                <v-btn v-bind="activatorProps" color="indigo-accent-2" icon="mdi-square-edit-outline"
+                  @click="editTask(task)"></v-btn>
               </template>
 
               <template v-slot:default="{ isActive }">
-                <v-card title="定时任务编辑">
-                  <div class="mx-4">
+                <v-card title="编辑定时任务">
+                  <div class="mx-4 mt-4">
+                    <v-text-field label="名称" v-model="taskConfig.name" disabled></v-text-field>
+                    <v-select v-model="taskConfig.devices" :items="['设备1', '设备2']" label="设备" multiple></v-select>
+                    <v-select v-model="taskConfig.repeat" :items="['周一', '周二', '周三', '周四', '周五', '周六', '周日']" label="重复"
+                      multiple></v-select>
+                    <v-divider class="mb-4"></v-divider>
+                    <v-row dense>
+                      <v-col cols="12" sm="4">
+                        <v-text-field v-model="taskConfig.time" label="时间" type="time"></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="4">
+                        <v-select v-model="taskConfig.action.key" :items="['电源', '亮度']" label="操作"></v-select>
+                      </v-col>
+                      <v-col cols="12" sm="4">
+                        <v-select v-model="taskConfig.action.value" :items="['开', '关']" label="结果"></v-select>
+                      </v-col>
+                    </v-row>
                   </div>
 
                   <v-card-actions>
                     <v-spacer></v-spacer>
+                    <v-btn text="保存" color="indigo-accent-2" @click="updateTask(true)"></v-btn>
                     <v-btn text="关闭" @click="isActive.value = false"></v-btn>
                   </v-card-actions>
                 </v-card>
@@ -90,7 +108,7 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn text="添加" color="indigo-accent-2" @click="addTask()"></v-btn>
+            <v-btn text="添加" color="indigo-accent-2" @click="updateTask(false)"></v-btn>
             <v-btn text="关闭" @click="isActive.value = false"></v-btn>
           </v-card-actions>
         </v-card>
@@ -183,8 +201,8 @@ async function fetchTaskList() {
   }
 }
 
-// 添加定时任务
-async function addTask() {
+// 更新定时任务，更新或添加
+async function updateTask(isExisting) {
   // 处理定时任务配置字段
   let data = {
     'name': taskConfig.value.name,
@@ -207,7 +225,7 @@ async function addTask() {
   try {
     const response = await axios.get('/api/timing/setTask', {
       params: {
-        action: 'add',
+        action: isExisting ? 'update' : 'add',
         data: JSON.stringify(data)
       }
     })
@@ -239,6 +257,36 @@ async function deleteTask(name) {
     }
   } catch (error) {
     console.error('Error deleting timing task list:', error)
+  }
+}
+
+// 打开编辑定时任务对话框
+async function editTask(config) {
+  console.log(config)
+  taskConfig.value = {
+    'name': config.name,
+    'devices': [],
+    'time': config.time,
+    'repeat': [],
+    'action': {}
+  }
+
+  const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+  const actionText = { 'Power': '电源', 'Dimmer': '亮度', 'Hue': '色调', 'Sat': '饱和度', 'CT': '色温' }
+  const actionType = Object.keys(config.action)[0]
+
+  // 处理定时任务配置字段
+  for (let i = 0; i < config.devices.length; i++)
+    taskConfig.value.devices.push(config.devices[i])
+  for (let i = 0; i < config.repeat.length; i++)
+    taskConfig.value.repeat.push(days[config.repeat[i]])
+  if (actionType === 'Power') {
+    taskConfig.value.action.key = '电源'
+    taskConfig.value.action.value = config.action.Power ? '开' : '关'
+  }
+  else {
+    taskConfig.value.action.key = actionText[actionType]
+    taskConfig.value.action.value = Object.values(config.action)[0]
   }
 }
 </script>
