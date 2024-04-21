@@ -69,6 +69,12 @@
     </v-row>
 
     <v-btn icon="mdi-plus" size="large" color="indigo" style="position: fixed; bottom: 40px; right: 50px;"></v-btn>
+
+    <!-- 提示消息条 -->
+    <v-snackbar timeout="2000" v-model="snackbarConfig.show" color="indigo">
+      <v-icon :icon="snackbarConfig.icon" :color="snackbarConfig.iconColor" class="mr-2"></v-icon>
+      {{ snackbarConfig.text }}
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -82,6 +88,12 @@ const disabledEdit = ref(false)
 const emptyInfo = ref({
   'heading': '查询设备中......',
   'subheading': ''
+})
+const snackbarConfig = ref({
+  'show': false,
+  'text': '',
+  'icon': '',
+  'iconColor': '',
 })
 
 onMounted(() => {
@@ -99,40 +111,48 @@ function getStatusText(device) {
   return '已关闭'
 }
 
+// 显示提示消息条
+function showMessage(text, icon, iconColor) {
+  snackbarConfig.value = {
+    show: true,
+    text: text,
+    icon: 'mdi-' + icon,
+    iconColor: iconColor,
+  }
+}
+
 // 获取设备列表
 async function fetchDeviceList() {
   disabledEdit.value = true
-  try {
-    const response = await axios.get('/api/lighting/devices', { timeout: 4000 })
-    if (response.status === 200) {
-      deviceList.value = response.data
+  await axios.get('/api/lighting/devices', { timeout: 4000 }).then(response => {
+    deviceList.value = response.data
 
-      // 检查设备照明模式
-      deviceList.value.forEach(device => {
-        if (device.ColorMode == 2) {
-          device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3)
-        }
-      })
-      if (deviceList.value.length === 0) {
-        emptyInfo.value = {
-          'heading': '未查询到设备',
-          'subheading': '未绑定设备，请点击右下角添加'
-        }
+    // 检查设备照明模式
+    deviceList.value.forEach(device => {
+      if (device.ColorMode == 2) {
+        device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3)
       }
-    } else {
-      console.error('Failed to fetch device list:', response.statusText)
+    })
+    if (deviceList.value.length === 0) {
       emptyInfo.value = {
         'heading': '未查询到设备',
-        'subheading': '网关连接出错，请检查网关设备'
+        'subheading': '未绑定设备，请点击右下角添加'
       }
     }
-  } catch (error) {
-    console.error('Error fetching device list:', error)
-    emptyInfo.value = {
-      'heading': '未查询到设备',
-      'subheading': '网关连接出错，请检查网关设备或网络连接'
+  }).catch(error => {
+    if (error.response) {
+      emptyInfo.value = {
+        'heading': '获取设备列表失败',
+        'subheading': '请稍后再试，错误信息：' + error.response.data
+      }
     }
-  }
+    else {
+      emptyInfo.value = {
+        'heading': '网关连接出错',
+        'subheading': '请检查网络连接或网关设备，错误信息：' + error.message
+      }
+    }
+  })
   disabledEdit.value = false
 }
 
@@ -140,29 +160,25 @@ async function fetchDeviceList() {
 async function updateDeviceState(device, key, value, disabled = true) {
   var state = {}
   state[key] = value
+  let result = false
 
   if (disabled) disabledEdit.value = true
-  try {
-    const response = await axios.get('/api/lighting/setState', {
-      params: {
-        device: device.Device,
-        state: JSON.stringify(state),
-      },
-    })
-    if (response.status === 200) {
-      Object.assign(device, state)
-
-      if (disabled) disabledEdit.value = false
-      return true
-    } else {
-      console.error('Failed to upload device state:', response.statusText)
-    }
-  } catch (error) {
-    console.error('Error uploading device state:', error)
-  }
+  await axios.get('/api/lighting/setState', {
+    params: {
+      device: device.Device,
+      state: JSON.stringify(state),
+    },
+  }).then(response => {
+    Object.assign(device, state)
+    result = true
+  }).catch(error => {
+    if (error.response)
+      showMessage('设置设备配置失败：' + error.response.data, 'alert-circle', 'red')
+    else showMessage('设置设备配置出错：' + error.message, 'alert-circle', 'red')
+  })
 
   if (disabled) disabledEdit.value = false
-  return false
+  return result
 }
 
 // 颜色转换辅助方法

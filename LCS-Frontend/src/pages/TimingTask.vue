@@ -258,7 +258,7 @@ async function updateTask(isExisting) {
 
 // 删除定时任务
 async function deleteTask(name) {
-  const response = await axios.get('/api/timing/setTask', {
+  await axios.get('/api/timing/setTask', {
     params: {
       action: 'delete',
       data: JSON.stringify({
