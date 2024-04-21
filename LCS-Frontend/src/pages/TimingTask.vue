@@ -1,8 +1,10 @@
 <template>
   <v-container>
     <div class="d-flex flex-column fill-height justify-center align-center" v-if="taskList.length === 0">
-      <h1 class="text-h4 font-weight-thin my-8">未查询到定时任务</h1>
-      <h3 class="subheading">请点击右下角添加定时任务</h3>
+      <h1 class="text-h4 font-weight-thin my-8">{{ emptyInfo.heading }}</h1>
+      <h3 class="subheading">{{ emptyInfo.subheading }}</h3>
+      <v-progress-circular color="indigo" indeterminate size="70" width="7"
+        v-if="emptyInfo.subheading === ''"></v-progress-circular>
     </div>
     <v-row dense>
       <v-col v-for="task in taskList" cols="12" sm="6" md="4">
@@ -127,17 +129,7 @@
 import axios from 'axios'
 import { ref, onMounted } from 'vue'
 
-const taskList = ref([
-  {
-    'name': '测试任务',
-    'devices': ['设备1', '设备2'],
-    'time': '08:00',
-    'repeat': [1, 2, 3],
-    'action': {
-      'Power': 24
-    },
-  }
-])
+const taskList = ref([])
 const taskConfig = ref({
   'name': '',
   'devices': [],
@@ -147,6 +139,10 @@ const taskConfig = ref({
     'key': '',
     'value': ''
   },
+})
+const emptyInfo = ref({
+  'heading': '获取定时任务列表中......',
+  'subheading': ''
 })
 const snackbarConfig = ref({
   'show': false,
@@ -213,10 +209,26 @@ function showMessage(text, icon, iconColor) {
 async function fetchTaskList() {
   await axios.get('/api/timing/tasks').then(response => {
     taskList.value = response.data
+
+    if (taskList.value.length === 0) {
+      emptyInfo.value = {
+        'heading': '定时任务列表为空',
+        'subheading': '未添加定时任务，请点击右下角按钮添加'
+      }
+    }
   }).catch(error => {
-    if (error.response)
-      showMessage('获取任务列表失败：' + error.response.data, 'alert-circle', 'red')
-    else showMessage('获取任务列表出错：' + error.message, 'alert-circle', 'red')
+    if (error.response) {
+      emptyInfo.value = {
+        'heading': '获取定时任务列表失败',
+        'subheading': '请稍后再试，错误信息：' + error.response.data
+      }
+    }
+    else {
+      emptyInfo.value = {
+        'heading': '网络连接出错',
+        'subheading': '请检查网络连接，错误信息：' + error.message
+      }
+    }
   })
 }
 

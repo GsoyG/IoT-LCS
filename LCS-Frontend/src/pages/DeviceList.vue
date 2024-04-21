@@ -86,7 +86,7 @@ const deviceList = ref([])
 const deviceConfig = ref({})
 const disabledEdit = ref(false)
 const emptyInfo = ref({
-  'heading': '查询设备中......',
+  'heading': '获取设备列表中......',
   'subheading': ''
 })
 const snackbarConfig = ref({
@@ -135,8 +135,8 @@ async function fetchDeviceList() {
     })
     if (deviceList.value.length === 0) {
       emptyInfo.value = {
-        'heading': '未查询到设备',
-        'subheading': '未绑定设备，请点击右下角添加'
+        'heading': '设备列表为空',
+        'subheading': '未绑定设备，请点击右下角按钮添加'
       }
     }
   }).catch(error => {
