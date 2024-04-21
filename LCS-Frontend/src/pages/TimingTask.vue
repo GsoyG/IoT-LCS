@@ -22,7 +22,7 @@
             <v-spacer></v-spacer>
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind="activatorProps" icon="mdi-square-edit-outline" @click=""></v-btn>
+                <v-btn v-bind="activatorProps" icon="mdi-square-edit-outline"></v-btn>
               </template>
 
               <template v-slot:default="{ isActive }">
@@ -43,7 +43,43 @@
       </v-col>
     </v-row>
 
-    <v-btn icon="mdi-plus" size="large" color="indigo" style="position: fixed; bottom: 40px; right: 50px;"></v-btn>
+    <!-- 定时任务添加对话框 -->
+    <v-dialog max-width="500">
+      <template v-slot:activator="{ props: activatorProps }">
+        <v-btn v-bind="activatorProps" icon="mdi-plus" size="large" color="indigo"
+          style="position: fixed; bottom: 40px; right: 50px;"></v-btn>
+      </template>
+
+      <template v-slot:default="{ isActive }">
+        <v-card title="添加定时任务">
+          <div class="mx-4 mt-4">
+            <v-text-field label="名称" v-model="taskConfig.name"></v-text-field>
+            <v-select v-model="taskConfig.devices" :items="['设备1', '设备2']" label="设备" multiple></v-select>
+            <v-select v-model="taskConfig.repeat" :items="['周一', '周二', '周三', '周四', '周五', '周六', '周日']" label="重复"
+              multiple></v-select>
+            <v-divider class="mb-4"></v-divider>
+            <v-row dense>
+              <v-col cols="12" sm="4">
+                <v-text-field v-model="taskConfig.time" label="时间"
+                  type="time"></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="4">
+                <v-select v-model="taskConfig.action.key" :items="['电源', '亮度']" label="操作"></v-select>
+              </v-col>
+              <v-col cols="12" sm="4">
+                <v-select v-model="taskConfig.action.value" :items="['开', '关']" label="结果"></v-select>
+              </v-col>
+            </v-row>
+          </div>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text="添加" color="indigo-accent-2" @click="addTask()"></v-btn>
+            <v-btn text="关闭" @click="isActive.value = false"></v-btn>
+          </v-card-actions>
+        </v-card>
+      </template>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -62,7 +98,18 @@ const taskList = ref([
     },
   }
 ])
+const taskConfig = ref({
+  'name': '',
+  'devices': [],
+  'time': '12:30:00',
+  'repeat': [],
+  'action': {
+    'key': '',
+    'value': ''
+  },
+})
 
+// 获取重复文本
 function getRepeatText(repeat) {
   const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
@@ -88,14 +135,9 @@ function getRepeatText(repeat) {
   });
   return text
 }
+// 获取操作文本
 function getActionText(action) {
-  const actionText = {
-    'Power': '电源',
-    'Dimmer': '亮度',
-    'Hue': '色调',
-    'Sat': '饱和度',
-    'CT': '色温'
-  }
+  const actionText = { 'Power': '电源', 'Dimmer': '亮度', 'Hue': '色调', 'Sat': '饱和度', 'CT': '色温' }
   const actionType = Object.keys(action)[0]
 
   let text = actionText[actionType] + ' 设为 '
@@ -105,5 +147,62 @@ function getActionText(action) {
   }
   text += action[actionType]
   return text
+}
+
+onMounted(() => {
+  fetchTaskList()
+})
+
+// 获取定时任务列表
+async function fetchTaskList() {
+  try {
+    const response = await axios.get('/api/timing/tasks')
+    if (response.status === 200) {
+      taskList.value = response.data
+    } else {
+      console.error('Failed to fetch timing task list:', response.statusText)
+    }
+  } catch (error) {
+    console.error('Error fetching timing task list:', error)
+  }
+}
+
+// 添加定时任务
+async function addTask() {
+  // 处理定时任务配置字段
+  let data = {
+    'name': taskConfig.value.name,
+    'devices': [],
+    'time': taskConfig.value.time,
+    'repeat': [],
+    'action': {}
+  }
+  const days = {'周一': 0, '周二': 1, '周三': 2, '周四': 3, '周五': 4, '周六': 5, '周日': 6 }
+  const actionText = { '电源': 'Power', '亮度': 'Dimmer', '色调': 'Hue', '饱和度': 'Sat', '色温': 'CT' }
+  for (let i = 0; i < taskConfig.value.devices.length; i++) {
+    data.devices.push(taskConfig.value.devices[i])
+  }
+  for (let i = 0; i < taskConfig.value.repeat.length; i++) {
+    data.repeat.push(days[taskConfig.value.repeat[i]])
+  }
+  if (taskConfig.value.action.key === '电源')
+    data.action['Power'] = taskConfig.value.action.value === '开' ? 1 : 0
+  else data.action[actionText[taskConfig.value.action.key]] = taskConfig.value.action.value
+
+  try {
+    const response = await axios.get('/api/timing/setTask', {
+      params: {
+        action: 'add',
+        data: JSON.stringify(data)
+      }
+    })
+    if (response.status === 200) {
+      fetchTaskList()
+    } else {
+      console.error('Failed to fetch timing task list:', response.statusText)
+    }
+  } catch (error) {
+    console.error('Error fetching timing task list:', error)
+  }
 }
 </script>
