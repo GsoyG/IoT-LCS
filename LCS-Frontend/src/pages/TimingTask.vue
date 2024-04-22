@@ -17,21 +17,20 @@
               <span class="text-h6" v-for="device in task.devices">{{ device + '、' }}</span>
             </div>
             <v-divider class="my-2"></v-divider>
-            <v-row>
-              <v-col class="text-h6 d-flex justify-center align-center">{{ task.time }}</v-col>
-              <v-col>
-                <v-switch v-model="task.enable" :label="task.enable ? '启用' : '禁用'" color="indigo" class="text-right"
-                  @update:model-value="setTaskEnable(task.name, task.enable)" hide-details></v-switch>
-              </v-col>
-            </v-row>
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-h5">时间：{{ task.time }}</span>
+              <v-switch v-model="task.enable" :label="task.enable ? '启用' : '禁用'" color="indigo" class="text-right"
+                @update:model-value="setTaskEnable(task.name, task.enable)" hide-details></v-switch>
+            </div>
             <p class="text-truncate">重复：{{ getRepeatText(task.repeat) }}</p>
             <p>操作：{{ getActionText(task.action) }}</p>
           </div>
 
           <v-card-actions>
             <!-- 删除按钮 -->
-            <v-btn color="red" icon="mdi-delete-outline" @click="deleteDialog.show = true;deleteDialog.taskName = task.name;"></v-btn>
-            
+            <v-btn color="red" icon="mdi-delete-outline"
+              @click="deleteDialog.show = true;deleteDialog.taskName = task.name;"></v-btn>
+
             <v-spacer></v-spacer>
             <!-- 编辑对话框 -->
             <v-dialog max-width="500">
