@@ -6,7 +6,7 @@
       <v-progress-circular color="indigo" indeterminate size="70" width="7"
         v-if="emptyInfo.subheading === ''"></v-progress-circular>
     </div>
-    <v-row dense>
+    <v-row>
       <v-col v-for="device in deviceList" cols="12" sm="6" md="4">
         <v-card outlined>
           <v-card-title>{{ device.Device }}</v-card-title>
