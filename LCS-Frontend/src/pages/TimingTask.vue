@@ -8,34 +8,23 @@
     </div>
     <v-row dense>
       <v-col v-for="task in taskList" cols="12" sm="6" md="4">
-        <v-card outlined>
+        <v-card outlined max-height="400">
           <v-card-title>{{ task.name }}</v-card-title>
 
           <div class="mx-4">
-            <span class="text-h5" v-for="device in task.devices">{{ device + '、' }}</span>
+            <div class="text-truncate">
+              <span class="text-h6" v-for="device in task.devices">{{ device + '、' }}</span>
+            </div>
             <v-divider class="my-2"></v-divider>
-            <p class="text-h6">时间：{{ task.time }}</p>
-            <p class="text-h6">重复：{{ getRepeatText(task.repeat) }}</p>
-            <p class="text-h6">操作：{{ getActionText(task.action) }}</p>
+            <p>时间：{{ task.time }}</p>
+            <p class="text-truncate">重复：{{ getRepeatText(task.repeat) }}</p>
+            <p>操作：{{ getActionText(task.action) }}</p>
           </div>
 
           <v-card-actions>
-            <!-- 删除对话框 -->
-            <v-dialog max-width="400">
-              <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind="activatorProps" color="red" icon="mdi-delete-outline"></v-btn>
-              </template>
-
-              <template v-slot:default="{ isActive }">
-                <v-card title="删除定时任务" text="确定删除此定时任务吗？此操作将不可恢复。">
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn text="确认" color="red" @click="deleteTask(task.name, isActive)"></v-btn>
-                    <v-btn text="取消" @click="isActive.value = false"></v-btn>
-                  </v-card-actions>
-                </v-card>
-              </template>
-            </v-dialog>
+            <!-- 删除按钮 -->
+            <v-btn v-bind="activatorProps" color="red" icon="mdi-delete-outline"
+              @click="deleteDialog.show = true;deleteDialog.taskName = task.name;"></v-btn>
 
             <v-spacer></v-spacer>
             <!-- 编辑对话框 -->
@@ -49,7 +38,8 @@
                 <v-card title="编辑定时任务">
                   <div class="mx-4 mt-4">
                     <v-text-field label="名称" v-model="taskConfig.name" disabled></v-text-field>
-                    <v-select v-model="taskConfig.devices" :items="['设备1', '设备2']" label="设备" multiple></v-select>
+                    <v-select v-model="taskConfig.devices" :items="['设备1', '设备2', '设备3', '设备4', '设备5', '设备6']"
+                      label="设备" multiple></v-select>
                     <v-select v-model="taskConfig.repeat" :items="['周一', '周二', '周三', '周四', '周五', '周六', '周日']" label="重复"
                       multiple></v-select>
                     <v-divider class="mb-4"></v-divider>
@@ -83,6 +73,17 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- 删除对话框 -->
+    <v-dialog max-width="400" v-model="deleteDialog.show">
+      <v-card title="删除定时任务" text="确定删除此定时任务吗？此操作将不可恢复。">
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text="确认" color="red" @click="deleteTask()"></v-btn>
+          <v-btn text="取消" @click="deleteDialog.show = false"></v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- 添加对话框 -->
     <v-dialog max-width="500">
@@ -147,15 +148,19 @@ const taskConfig = ref({
     'value': ''
   },
 })
-const emptyInfo = ref({
+const emptyInfo = ref({ // 加载提示信息
   'heading': '获取定时任务列表中......',
   'subheading': ''
 })
-const snackbarConfig = ref({
+const snackbarConfig = ref({ // 提示消息条信息
   'show': false,
   'text': '',
   'icon': '',
   'iconColor': '',
+})
+const deleteDialog = ref({ // 删除对话框信息
+  'show': false,
+  'taskName': ''
 })
 
 onMounted(() => {
@@ -277,12 +282,12 @@ async function updateTask(isExisting, isActive) {
 }
 
 // 删除定时任务
-async function deleteTask(name, isActive) {
+async function deleteTask() {
   await axios.get('/api/timing/setTask', {
     params: {
       action: 'delete',
       data: JSON.stringify({
-        name: name
+        name: deleteDialog.value.taskName
       })
     }
   }).then(response => {
@@ -293,7 +298,7 @@ async function deleteTask(name, isActive) {
       showMessage('删除任务失败：' + error.response.data, 'alert-circle', 'red')
     else showMessage('删除任务出错：' + error.message, 'alert-circle', 'red')
   })
-  isActive.value = false
+  deleteDialog.value.show = false
 }
 
 // 打开编辑定时任务对话框
