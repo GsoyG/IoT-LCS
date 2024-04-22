@@ -278,13 +278,13 @@ async function updateTask(isExisting, isActive) {
       data: JSON.stringify(data)
     }
   }).then(response => {
-    showMessage('设置任务成功', 'check-circle', 'green')
+    showMessage('设置任务成功', 'check-circle', 'success')
     isActive.value = false
     fetchTaskList()
   }).catch(error => {
     if (error.response)
-      showMessage('设置任务失败：' + error.response.data, 'alert-circle', 'red')
-    else showMessage('设置任务出错：' + error.message, 'alert-circle', 'red')
+      showMessage('设置任务失败：' + error.response.data, 'alert-circle', 'warning')
+    else showMessage('设置任务出错：' + error.message, 'alert-circle', 'warning')
   });
 }
 
@@ -301,11 +301,11 @@ async function setTaskEnable(taskName, isEnable) {
       })
     }
   }).then(response => {
-    showMessage(result + '任务成功', 'check-circle', 'green')
+    showMessage(result + '任务成功', 'check-circle', 'success')
   }).catch(error => {
     if (error.response)
-      showMessage(result + '任务失败：' + error.response.data, 'alert-circle', 'red')
-    else showMessage(result + '任务出错：' + error.message, 'alert-circle', 'red')
+      showMessage(result + '任务失败：' + error.response.data, 'alert-circle', 'warning')
+    else showMessage(result + '任务出错：' + error.message, 'alert-circle', 'warning')
     fetchTaskList()
   });
 }
@@ -320,12 +320,12 @@ async function deleteTask() {
       })
     }
   }).then(response => {
-    showMessage('删除任务成功', 'check-circle', 'green')
+    showMessage('删除任务成功', 'check-circle', 'success')
     fetchTaskList()
   }).catch(error => {
     if (error.response)
-      showMessage('删除任务失败：' + error.response.data, 'alert-circle', 'red')
-    else showMessage('删除任务出错：' + error.message, 'alert-circle', 'red')
+      showMessage('删除任务失败：' + error.response.data, 'alert-circle', 'warning')
+    else showMessage('删除任务出错：' + error.message, 'alert-circle', 'warning')
   })
   deleteDialog.value.show = false
 }

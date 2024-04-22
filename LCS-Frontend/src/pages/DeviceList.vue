@@ -173,8 +173,8 @@ async function updateDeviceState(device, key, value, disabled = true) {
     result = true
   }).catch(error => {
     if (error.response)
-      showMessage('设置设备配置失败：' + error.response.data, 'alert-circle', 'red')
-    else showMessage('设置设备配置出错：' + error.message, 'alert-circle', 'red')
+      showMessage('设置设备配置失败：' + error.response.data, 'alert-circle', 'warning')
+    else showMessage('设置设备配置出错：' + error.message, 'alert-circle', 'warning')
   })
 
   if (disabled) disabledEdit.value = false
