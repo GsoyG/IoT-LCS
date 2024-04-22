@@ -30,7 +30,7 @@
                 <v-card title="删除定时任务" text="确定删除此定时任务吗？此操作将不可恢复。">
                   <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn text="确认" color="red" @click="deleteTask(task.name)"></v-btn>
+                    <v-btn text="确认" color="red" @click="deleteTask(task.name, isActive)"></v-btn>
                     <v-btn text="取消" @click="isActive.value = false"></v-btn>
                   </v-card-actions>
                 </v-card>
@@ -58,24 +58,28 @@
                         <v-text-field v-model="taskConfig.time" label="时间" type="time"></v-text-field>
                       </v-col>
                       <v-col cols="12" sm="4">
-                        <v-select v-model="taskConfig.action.key" :items="['电源', '亮度']" label="操作"></v-select>
+                        <v-select v-model="taskConfig.action.key" :items="['电源', '亮度', '色调', '饱和', '色温']"
+                          label="操作"></v-select>
                       </v-col>
                       <v-col cols="12" sm="4">
-                        <v-select v-model="taskConfig.action.value" :items="['开', '关']" label="结果"></v-select>
+                        <v-select v-model="taskConfig.action.value" :items="['开', '关']" label="结果"
+                          v-if="taskConfig.action.key === '电源'"></v-select>
+                        <v-text-field v-model="taskConfig.action.value" type="number" max="500" min="1" label="结果"
+                          v-else></v-text-field>
+
                       </v-col>
                     </v-row>
                   </div>
 
                   <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn text="保存" color="indigo-accent-2" @click="updateTask(true)"></v-btn>
+                    <v-btn text="保存" color="indigo-accent-2" @click="updateTask(true, isActive)"></v-btn>
                     <v-btn text="关闭" @click="isActive.value = false"></v-btn>
                   </v-card-actions>
                 </v-card>
               </template>
             </v-dialog>
           </v-card-actions>
-
         </v-card>
       </v-col>
     </v-row>
@@ -100,17 +104,20 @@
                 <v-text-field v-model="taskConfig.time" label="时间" type="time"></v-text-field>
               </v-col>
               <v-col cols="12" sm="4">
-                <v-select v-model="taskConfig.action.key" :items="['电源', '亮度']" label="操作"></v-select>
+                <v-select v-model="taskConfig.action.key" :items="['电源', '亮度', '色调', '饱和', '色温']" label="操作"></v-select>
               </v-col>
               <v-col cols="12" sm="4">
-                <v-select v-model="taskConfig.action.value" :items="['开', '关']" label="结果"></v-select>
+                <v-select v-model="taskConfig.action.value" :items="['开', '关']" label="结果"
+                  v-if="taskConfig.action.key === '电源'"></v-select>
+                <v-text-field v-model="taskConfig.action.value" type="number" max="500" min="1" label="结果"
+                  v-else></v-text-field>
               </v-col>
             </v-row>
           </div>
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn text="添加" color="indigo-accent-2" @click="updateTask(false)"></v-btn>
+            <v-btn text="添加" color="indigo-accent-2" @click="updateTask(false, isActive)"></v-btn>
             <v-btn text="关闭" @click="isActive.value = false"></v-btn>
           </v-card-actions>
         </v-card>
@@ -183,7 +190,7 @@ function getRepeatText(repeat) {
 }
 // 获取操作文本
 function getActionText(action) {
-  const actionText = { 'Power': '电源', 'Dimmer': '亮度', 'Hue': '色调', 'Sat': '饱和度', 'CT': '色温' }
+  const actionText = { 'Power': '电源', 'Dimmer': '亮度', 'Hue': '色调', 'Sat': '饱和', 'CT': '色温' }
   const actionType = Object.keys(action)[0]
 
   let text = actionText[actionType] + ' 设为 '
@@ -233,7 +240,7 @@ async function fetchTaskList() {
 }
 
 // 更新定时任务，更新或添加
-async function updateTask(isExisting) {
+async function updateTask(isExisting, isActive) {
   // 处理定时任务配置字段
   let data = {
     'name': taskConfig.value.name,
@@ -243,7 +250,7 @@ async function updateTask(isExisting) {
     'action': {}
   }
   const days = {'周一': 0, '周二': 1, '周三': 2, '周四': 3, '周五': 4, '周六': 5, '周日': 6 }
-  const actionText = { '电源': 'Power', '亮度': 'Dimmer', '色调': 'Hue', '饱和度': 'Sat', '色温': 'CT' }
+  const actionText = { '电源': 'Power', '亮度': 'Dimmer', '色调': 'Hue', '饱和': 'Sat', '色温': 'CT' }
   for (let i = 0; i < taskConfig.value.devices.length; i++)
     data.devices.push(taskConfig.value.devices[i])
   for (let i = 0; i < taskConfig.value.repeat.length; i++)
@@ -252,24 +259,25 @@ async function updateTask(isExisting) {
     data.action['Power'] = taskConfig.value.action.value === '开' ? 1 : 0
   else data.action[actionText[taskConfig.value.action.key]] = taskConfig.value.action.value
 
-  // 发送添加请求
+  // 发送更新请求
   await axios.get('/api/timing/setTask', {
     params: {
       action: isExisting ? 'update' : 'add',
       data: JSON.stringify(data)
     }
   }).then(response => {
-    showMessage('添加任务成功', 'check-circle', 'green')
+    showMessage('更新任务成功', 'check-circle', 'green')
+    isActive.value = false
     fetchTaskList()
   }).catch(error => {
     if (error.response)
-      showMessage('添加任务失败：' + error.response.data, 'alert-circle', 'red')
-    else showMessage('添加任务出错：' + error.message, 'alert-circle', 'red')
+      showMessage('更新任务失败：' + error.response.data, 'alert-circle', 'red')
+    else showMessage('更新任务出错：' + error.message, 'alert-circle', 'red')
   });
 }
 
 // 删除定时任务
-async function deleteTask(name) {
+async function deleteTask(name, isActive) {
   await axios.get('/api/timing/setTask', {
     params: {
       action: 'delete',
@@ -285,6 +293,7 @@ async function deleteTask(name) {
       showMessage('删除任务失败：' + error.response.data, 'alert-circle', 'red')
     else showMessage('删除任务出错：' + error.message, 'alert-circle', 'red')
   })
+  isActive.value = false
 }
 
 // 打开编辑定时任务对话框
@@ -298,7 +307,7 @@ async function editTask(config) {
   }
 
   const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-  const actionText = { 'Power': '电源', 'Dimmer': '亮度', 'Hue': '色调', 'Sat': '饱和度', 'CT': '色温' }
+  const actionText = { 'Power': '电源', 'Dimmer': '亮度', 'Hue': '色调', 'Sat': '饱和', 'CT': '色温' }
   const actionType = Object.keys(config.action)[0]
 
   // 处理定时任务配置字段
