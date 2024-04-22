@@ -11,21 +11,27 @@
         <v-card outlined max-height="400">
           <v-card-title>{{ task.name }}</v-card-title>
 
+          <!-- 显示面板 -->
           <div class="mx-4">
             <div class="text-truncate">
               <span class="text-h6" v-for="device in task.devices">{{ device + '、' }}</span>
             </div>
             <v-divider class="my-2"></v-divider>
-            <p>时间：{{ task.time }}</p>
+            <v-row>
+              <v-col class="text-h6 d-flex justify-center align-center">{{ task.time }}</v-col>
+              <v-col>
+                <v-switch v-model="task.enable" :label="task.enable ? '启用' : '禁用'" color="indigo" class="text-right"
+                  @update:model-value="setTaskEnable(task.name, task.enable)" hide-details></v-switch>
+              </v-col>
+            </v-row>
             <p class="text-truncate">重复：{{ getRepeatText(task.repeat) }}</p>
             <p>操作：{{ getActionText(task.action) }}</p>
           </div>
 
           <v-card-actions>
             <!-- 删除按钮 -->
-            <v-btn v-bind="activatorProps" color="red" icon="mdi-delete-outline"
-              @click="deleteDialog.show = true;deleteDialog.taskName = task.name;"></v-btn>
-
+            <v-btn color="red" icon="mdi-delete-outline" @click="deleteDialog.show = true;deleteDialog.taskName = task.name;"></v-btn>
+            
             <v-spacer></v-spacer>
             <!-- 编辑对话框 -->
             <v-dialog max-width="500">
@@ -44,14 +50,14 @@
                       multiple></v-select>
                     <v-divider class="mb-4"></v-divider>
                     <v-row dense>
-                      <v-col cols="12" sm="4">
+                      <v-col>
                         <v-text-field v-model="taskConfig.time" label="时间" type="time"></v-text-field>
                       </v-col>
-                      <v-col cols="12" sm="4">
+                      <v-col>
                         <v-select v-model="taskConfig.action.key" :items="['电源', '亮度', '色调', '饱和', '色温']"
                           label="操作"></v-select>
                       </v-col>
-                      <v-col cols="12" sm="4">
+                      <v-col>
                         <v-select v-model="taskConfig.action.value" :items="['开', '关']" label="结果"
                           v-if="taskConfig.action.key === '电源'"></v-select>
                         <v-text-field v-model="taskConfig.action.value" type="number" max="500" min="1" label="结果"
@@ -101,13 +107,13 @@
               multiple></v-select>
             <v-divider class="mb-4"></v-divider>
             <v-row dense>
-              <v-col cols="12" sm="4">
+              <v-col>
                 <v-text-field v-model="taskConfig.time" label="时间" type="time"></v-text-field>
               </v-col>
-              <v-col cols="12" sm="4">
+              <v-col>
                 <v-select v-model="taskConfig.action.key" :items="['电源', '亮度', '色调', '饱和', '色温']" label="操作"></v-select>
               </v-col>
-              <v-col cols="12" sm="4">
+              <v-col>
                 <v-select v-model="taskConfig.action.value" :items="['开', '关']" label="结果"
                   v-if="taskConfig.action.key === '电源'"></v-select>
                 <v-text-field v-model="taskConfig.action.value" type="number" max="500" min="1" label="结果"
@@ -256,13 +262,14 @@ async function updateTask(isExisting, isActive) {
   }
   const days = {'周一': 0, '周二': 1, '周三': 2, '周四': 3, '周五': 4, '周六': 5, '周日': 6 }
   const actionText = { '电源': 'Power', '亮度': 'Dimmer', '色调': 'Hue', '饱和': 'Sat', '色温': 'CT' }
-  for (let i = 0; i < taskConfig.value.devices.length; i++)
+  for (let i = 0; i < taskConfig.value.devices.length; i++) // 处理设备列表字段
     data.devices.push(taskConfig.value.devices[i])
-  for (let i = 0; i < taskConfig.value.repeat.length; i++)
+  for (let i = 0; i < taskConfig.value.repeat.length; i++) // 处理重复列表字段
     data.repeat.push(days[taskConfig.value.repeat[i]])
-  if (taskConfig.value.action.key === '电源')
+  if (taskConfig.value.action.key === '电源') // 处理事件操作字段
     data.action['Power'] = taskConfig.value.action.value === '开' ? 1 : 0
   else data.action[actionText[taskConfig.value.action.key]] = taskConfig.value.action.value
+  if (!isExisting) data['enable'] = true // 新建任务默认启用
 
   // 发送更新请求
   await axios.get('/api/timing/setTask', {
@@ -271,13 +278,35 @@ async function updateTask(isExisting, isActive) {
       data: JSON.stringify(data)
     }
   }).then(response => {
-    showMessage('更新任务成功', 'check-circle', 'green')
+    showMessage('设置任务成功', 'check-circle', 'green')
     isActive.value = false
     fetchTaskList()
   }).catch(error => {
     if (error.response)
-      showMessage('更新任务失败：' + error.response.data, 'alert-circle', 'red')
-    else showMessage('更新任务出错：' + error.message, 'alert-circle', 'red')
+      showMessage('设置任务失败：' + error.response.data, 'alert-circle', 'red')
+    else showMessage('设置任务出错：' + error.message, 'alert-circle', 'red')
+  });
+}
+
+// 设置定制任务开启状态
+async function setTaskEnable(taskName, isEnable) {
+  const result = isEnable ? '开启' : '关闭'
+
+  await axios.get('/api/timing/setTask', {
+    params: {
+      action: 'update',
+      data: JSON.stringify({
+        name: taskName,
+        enable: isEnable
+      })
+    }
+  }).then(response => {
+    showMessage(result + '任务成功', 'check-circle', 'green')
+  }).catch(error => {
+    if (error.response)
+      showMessage(result + '任务失败：' + error.response.data, 'alert-circle', 'red')
+    else showMessage(result + '任务出错：' + error.message, 'alert-circle', 'red')
+    fetchTaskList()
   });
 }
 
@@ -316,11 +345,11 @@ async function editTask(config) {
   const actionType = Object.keys(config.action)[0]
 
   // 处理定时任务配置字段
-  for (let i = 0; i < config.devices.length; i++)
+  for (let i = 0; i < config.devices.length; i++) // 处理设备列表字段
     taskConfig.value.devices.push(config.devices[i])
-  for (let i = 0; i < config.repeat.length; i++)
+  for (let i = 0; i < config.repeat.length; i++) // 处理重复列表字段
     taskConfig.value.repeat.push(days[config.repeat[i]])
-  if (actionType === 'Power') {
+  if (actionType === 'Power') { // 处理事件操作字段
     taskConfig.value.action.key = '电源'
     taskConfig.value.action.value = config.action.Power ? '开' : '关'
   }
