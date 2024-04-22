@@ -53,6 +53,8 @@ async def set_timing_task(request):
     if action == 'add':
         if db.checkItem('TimingTask', 'name', data['name']):
             return web.Response(status = 400, text = '定时任务名称重复')
+        if data['name'] == '':
+            return web.Response(status = 400, text = '定时任务名称不能为空')
         db.addItem('TimingTask', data)
     elif action == 'delete':
         if not db.checkItem('TimingTask', 'name', data['name']):
