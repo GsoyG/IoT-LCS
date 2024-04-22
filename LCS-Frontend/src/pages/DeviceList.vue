@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <!-- 加载信息 -->
     <div class="d-flex flex-column fill-height justify-center align-center" v-if="deviceList.length === 0">
       <h1 class="text-h4 font-weight-thin my-8">{{ emptyInfo.heading }}</h1>
       <h3 class="subheading">{{ emptyInfo.subheading }}</h3>
@@ -8,6 +9,7 @@
     </div>
     <v-row>
       <v-col v-for="device in deviceList" cols="12" sm="6" md="4">
+
         <v-card outlined>
           <v-card-title>{{ device.Device }}</v-card-title>
 
@@ -29,8 +31,8 @@
           </div>
 
           <v-card-actions>
-            <!-- 编辑对话框 -->
             <v-spacer></v-spacer>
+            <!-- 编辑对话框及按钮 -->
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
                 <v-btn v-bind="activatorProps" color="indigo-accent-2" icon="mdi-square-edit-outline"
@@ -68,6 +70,7 @@
       </v-col>
     </v-row>
 
+    <!-- 添加按钮 -->
     <v-btn icon="mdi-plus" size="large" color="indigo" style="position: fixed; bottom: 40px; right: 50px;"></v-btn>
 
     <!-- 提示消息条 -->
