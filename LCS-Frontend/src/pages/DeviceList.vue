@@ -15,8 +15,8 @@
             <!-- 设备开关按钮 -->
             <v-row class="pb-8" justify="center">
               <v-col cols="auto">
-                <v-btn :prepend-icon="device.Reachable && device.Dimmer > 1 ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
-                  :color="device.Reachable && device.Dimmer > 1 ? '#' + device.RGB : ''" variant="tonal" rounded="lg"
+                <v-btn :prepend-icon="device.Reachable && device.Power ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
+                  :color="device.Reachable && device.Power ? '#' + device.RGB : ''" variant="tonal" rounded="lg"
                   @click="switchDevicePower(device)" :disabled="disabledEdit || !device.Reachable" stacked>
                   {{ getStatusText(device) }}
                 </v-btn>
@@ -44,7 +44,7 @@
                       <v-col cols="auto"
                         :style="`width: 100px; height: 100px; background: #${deviceConfig.RGB}; border-radius: 20px;`"></v-col>
                     </div>
-                    <v-slider min="2" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
+                    <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
                       :disabled="disabledEdit"
                       @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"></v-slider>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Hue" label="色调" :disabled="disabledEdit"
@@ -105,7 +105,7 @@ function getStatusText(device) {
   if (!device.Reachable) {
     return '已离线'
   }
-  if (device.Dimmer > 1) {
+  if (device.Power) {
     return '已开启'
   }
   return '已关闭'
@@ -170,6 +170,13 @@ async function updateDeviceState(device, key, value, disabled = true) {
     },
   }).then(response => {
     Object.assign(device, state)
+
+    // 检查是否切换电源状态
+    if (key === 'Dimmer') {
+      if (value < 2) device.Power = 0
+      if (value > 1) device.Power = 1
+    }
+
     result = true
   }).catch(error => {
     if (error.response)
@@ -218,7 +225,7 @@ async function updateDeviceColor(device, key, value) {
 
 // 切换设备开关状态
 async function switchDevicePower(device) {
-  const power = device.Dimmer > 1 ? 0 : 1
+  const power = !device.Power
   const text = power ? '开启' : '关闭'
   disabledEdit.value = true
 
