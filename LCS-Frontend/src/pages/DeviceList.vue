@@ -44,7 +44,7 @@
                       <v-col cols="auto"
                         :style="`width: 100px; height: 100px; background: #${deviceConfig.RGB}; border-radius: 20px;`"></v-col>
                     </div>
-                    <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
+                    <v-slider min="2" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
                       :disabled="disabledEdit"
                       @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"></v-slider>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Hue" label="色调" :disabled="disabledEdit"
@@ -218,11 +218,13 @@ async function updateDeviceColor(device, key, value) {
 
 // 切换设备开关状态
 async function switchDevicePower(device) {
-  var power = device.Dimmer > 1 ? 0 : 1
+  const power = device.Dimmer > 1 ? 0 : 1
+  const text = power ? '开启' : '关闭'
   disabledEdit.value = true
 
   // 切换后等待获取到设备最新状态后，获取最新状态列表
   if (await updateDeviceState(device, 'Power', power, false)) {
+    showMessage(text + '设备成功', 'check-circle', 'success')
     await new Promise(resolve => setTimeout(resolve, 2000))
     fetchDeviceList()
   }
