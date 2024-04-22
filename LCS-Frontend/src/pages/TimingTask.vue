@@ -22,8 +22,8 @@
               <v-switch v-model="task.enable" :label="task.enable ? '启用' : '禁用'" color="indigo" class="text-right"
                 @update:model-value="setTaskEnable(task.name, task.enable)" hide-details></v-switch>
             </div>
-            <p class="text-truncate">重复：{{ getRepeatText(task.repeat) }}</p>
-            <p>操作：{{ getActionText(task.action) }}</p>
+            <p class="text-truncate">重复：{{ parseRepeatText(task.repeat) }}</p>
+            <p>操作：{{ parseActionText(task.action) }}</p>
           </div>
 
           <v-card-actions>
@@ -68,7 +68,7 @@
 
                   <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn text="保存" color="indigo-accent-2" @click="updateTask(true, isActive)"></v-btn>
+                    <v-btn text="保存" color="indigo-accent-2" @click="updateTask(false); isActive.value = false"></v-btn>
                     <v-btn text="关闭" @click="isActive.value = false"></v-btn>
                   </v-card-actions>
                 </v-card>
@@ -84,7 +84,7 @@
       <v-card title="删除定时任务" text="确定删除此定时任务吗？此操作将不可恢复。">
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn text="确认" color="red" @click="deleteTask()"></v-btn>
+          <v-btn text="确认" color="red" @click="deleteTask(deleteDialog.taskName); deleteDialog.show = false"></v-btn>
           <v-btn text="取消" @click="deleteDialog.show = false"></v-btn>
         </v-card-actions>
       </v-card>
@@ -123,7 +123,7 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn text="添加" color="indigo-accent-2" @click="updateTask(false, isActive)"></v-btn>
+            <v-btn text="添加" color="indigo-accent-2" @click="updateTask(true); isActive.value = false"></v-btn>
             <v-btn text="关闭" @click="isActive.value = false"></v-btn>
           </v-card-actions>
         </v-card>
@@ -173,52 +173,39 @@ onMounted(() => {
 })
 
 // 获取重复文本
-function getRepeatText(repeat) {
+function parseRepeatText(repeat) {
   const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
-  if (repeat.length === 1) {
-    return days[repeat[0]]
-  }
-  if (repeat.length === 7) {
-    return '每天'
-  }
-  if (repeat.length === 0) {
-    return '不重复'
-  }
-  if (JSON.stringify(repeat) === JSON.stringify([5, 6])) {
-    return '每周末'
-  }
-  if (JSON.stringify(repeat) === JSON.stringify([0, 1, 2, 3, 4])) {
-    return '每周一至周五'
-  }
-
+  if (repeat.length === 7) return '每天'
+  if (repeat.length === 0) return '不重复'
+  if (repeat.length === 2 && [5, 6].every(i => repeat.includes(i))) return '每周末'
+  if (repeat.length === 5 && [0, 1, 2, 3, 4].every(i => repeat.includes(i))) return '每周一至周五'
   let text = ''
-  repeat.forEach(day => {
-    text += (days[day]) + '、'
-  });
-  return text
+  repeat.forEach(day => text += days[day] + '、');
+  return text.substring(0, text.length - 1)
 }
 // 获取操作文本
-function getActionText(action) {
+function parseActionText(action) {
   const actionText = { 'Power': '电源', 'Dimmer': '亮度', 'Hue': '色调', 'Sat': '饱和', 'CT': '色温' }
   const actionType = Object.keys(action)[0]
 
   let text = actionText[actionType] + ' 设为 '
-  if (actionType === 'Power') {
+  if (actionType === 'Power')
     text += action[actionType] ? '开' : '关'
-    return text
-  }
-  text += action[actionType]
+  else text += action[actionType]
   return text
 }
-
 // 显示提示消息条
-function showMessage(text, icon, iconColor) {
-  snackbarConfig.value = {
-    show: true,
-    text: text,
-    icon: 'mdi-' + icon,
-    iconColor: iconColor,
+function showMessage(text, type) {
+  switch (type) {
+    case 'success':
+      snackbarConfig.value = { show: true, text: text, icon: 'mdi-check-circle', iconColor: 'success' }
+      break;
+    case 'warning':
+      snackbarConfig.value = { show: true, text: text, icon: 'mdi-alert-circle', iconColor: 'warning' }
+      break;
+    default:
+      break;
   }
 }
 
@@ -227,134 +214,95 @@ async function fetchTaskList() {
   await axios.get('/api/timing/tasks').then(response => {
     taskList.value = response.data
 
-    if (taskList.value.length === 0) {
+    if (taskList.value.length === 0)
       emptyInfo.value = {
         'heading': '定时任务列表为空',
         'subheading': '未添加定时任务，请点击右下角按钮添加'
       }
-    }
   }).catch(error => {
-    if (error.response) {
+    if (error.response)
       emptyInfo.value = {
         'heading': '获取定时任务列表失败',
         'subheading': '请稍后再试，错误信息：' + error.response.data
       }
-    }
-    else {
+    else
       emptyInfo.value = {
         'heading': '网络连接出错',
         'subheading': '请检查网络连接，错误信息：' + error.message
       }
-    }
   })
 }
 
-// 更新定时任务，更新或添加
-async function updateTask(isExisting, isActive) {
+// 发送设置任务请求，用于添加、修改、删除任务
+async function setTaskRequest(action, data, infoText) {
+  await axios.get('/api/timing/setTask', {
+    params: {
+      action: action,
+      data: JSON.stringify(data)
+    }
+  }).then(response => {
+    showMessage(infoText + '任务成功', 'success')
+  }).catch(error => {
+    if (error.response)
+      showMessage(infoText + '任务失败：' + error.response.data, 'warning')
+    else showMessage(infoText + '任务出错：' + error.message, 'warning')
+  });
+  fetchTaskList()
+}
+
+// 设置定时任务，更新或添加
+async function updateTask(isAddTask) {
   // 处理定时任务配置字段
   let data = {
     'name': taskConfig.value.name,
-    'devices': [],
+    'devices': taskConfig.value.devices,
     'time': taskConfig.value.time,
     'repeat': [],
     'action': {}
   }
   const days = {'周一': 0, '周二': 1, '周三': 2, '周四': 3, '周五': 4, '周六': 5, '周日': 6 }
   const actionText = { '电源': 'Power', '亮度': 'Dimmer', '色调': 'Hue', '饱和': 'Sat', '色温': 'CT' }
-  for (let i = 0; i < taskConfig.value.devices.length; i++) // 处理设备列表字段
-    data.devices.push(taskConfig.value.devices[i])
+  const actionType = taskConfig.value.action.key
   for (let i = 0; i < taskConfig.value.repeat.length; i++) // 处理重复列表字段
     data.repeat.push(days[taskConfig.value.repeat[i]])
-  if (taskConfig.value.action.key === '电源') // 处理事件操作字段
+  if (actionType === '电源') // 处理事件操作字段
     data.action['Power'] = taskConfig.value.action.value === '开' ? 1 : 0
-  else data.action[actionText[taskConfig.value.action.key]] = taskConfig.value.action.value
-  if (!isExisting) data['enable'] = true // 新建任务默认启用
+  else data.action[actionText[actionType]] = taskConfig.value.action.value
+  if (isAddTask) data['enable'] = true // 新建任务默认启用
 
   // 发送更新请求
-  await axios.get('/api/timing/setTask', {
-    params: {
-      action: isExisting ? 'update' : 'add',
-      data: JSON.stringify(data)
-    }
-  }).then(response => {
-    showMessage('设置任务成功', 'check-circle', 'success')
-    isActive.value = false
-    fetchTaskList()
-  }).catch(error => {
-    if (error.response)
-      showMessage('设置任务失败：' + error.response.data, 'alert-circle', 'warning')
-    else showMessage('设置任务出错：' + error.message, 'alert-circle', 'warning')
-  });
+  await setTaskRequest(isAddTask ? 'add' : 'update', data, '设置')
 }
 
-// 设置定制任务开启状态
+// 设置定时任务开启状态
 async function setTaskEnable(taskName, isEnable) {
   const result = isEnable ? '开启' : '关闭'
-
-  await axios.get('/api/timing/setTask', {
-    params: {
-      action: 'update',
-      data: JSON.stringify({
-        name: taskName,
-        enable: isEnable
-      })
-    }
-  }).then(response => {
-    showMessage(result + '任务成功', 'check-circle', 'success')
-  }).catch(error => {
-    if (error.response)
-      showMessage(result + '任务失败：' + error.response.data, 'alert-circle', 'warning')
-    else showMessage(result + '任务出错：' + error.message, 'alert-circle', 'warning')
-    fetchTaskList()
-  });
+  await setTaskRequest('update', { name: taskName, enable: isEnable }, result)
 }
 
 // 删除定时任务
-async function deleteTask() {
-  await axios.get('/api/timing/setTask', {
-    params: {
-      action: 'delete',
-      data: JSON.stringify({
-        name: deleteDialog.value.taskName
-      })
-    }
-  }).then(response => {
-    showMessage('删除任务成功', 'check-circle', 'success')
-    fetchTaskList()
-  }).catch(error => {
-    if (error.response)
-      showMessage('删除任务失败：' + error.response.data, 'alert-circle', 'warning')
-    else showMessage('删除任务出错：' + error.message, 'alert-circle', 'warning')
-  })
-  deleteDialog.value.show = false
+async function deleteTask(taskName) {
+  await setTaskRequest('delete', { name: taskName }, '删除')
 }
 
 // 打开编辑定时任务对话框
 async function editTask(config) {
+  // 处理定时任务配置字段
   taskConfig.value = {
     'name': config.name,
-    'devices': [],
+    'devices': config.devices,
     'time': config.time,
     'repeat': [],
     'action': {}
   }
-
   const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
   const actionText = { 'Power': '电源', 'Dimmer': '亮度', 'Hue': '色调', 'Sat': '饱和', 'CT': '色温' }
   const actionType = Object.keys(config.action)[0]
-
-  // 处理定时任务配置字段
-  for (let i = 0; i < config.devices.length; i++) // 处理设备列表字段
-    taskConfig.value.devices.push(config.devices[i])
   for (let i = 0; i < config.repeat.length; i++) // 处理重复列表字段
     taskConfig.value.repeat.push(days[config.repeat[i]])
-  if (actionType === 'Power') { // 处理事件操作字段
-    taskConfig.value.action.key = '电源'
+  taskConfig.value.action.key = actionText[actionType] // 处理事件操作字段
+  if (actionType === 'Power')
     taskConfig.value.action.value = config.action.Power ? '开' : '关'
-  }
-  else {
-    taskConfig.value.action.key = actionText[actionType]
-    taskConfig.value.action.value = Object.values(config.action)[0]
-  }
+  else taskConfig.value.action.value = Object.values(config.action)[0]
 }
 </script>
