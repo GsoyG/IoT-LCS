@@ -15,15 +15,15 @@ class DatabBase:
         table = self.__db.table(table_name)
         return table.insert(data)
     
-    def update_item(self, table_name, idKey, data):
+    def update_item(self, table_name, id_key, data):
         table = self.__db.table(table_name)
-        return table.update(data, Query()[idKey] == data[idKey])
+        return table.update(data, Query()[id_key] == data[id_key])
     
-    def delete_item(self, table_name, idKey, idValue):
+    def delete_item(self, table_name, id_key, id_value):
         table = self.__db.table(table_name)
-        return table.remove(Query()[idKey] == idValue)
+        return table.remove(Query()[id_key] == id_value)
     
     # 检查表项是否存在
-    def check_item(self, table_name, idKey, idValue):
+    def check_item(self, table_name, id_key, id_value):
         table = self.__db.table(table_name)
-        return table.contains(Query()[idKey] == idValue)
+        return table.contains(Query()[id_key] == id_value)
