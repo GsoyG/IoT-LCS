@@ -18,7 +18,7 @@ class HttpServer:
 
     # 中间件
     @middleware
-    async def __middleware(self, request, handler):
+    async def middleware(self, request, handler):
         current_time = datetime.now()
         last_time = current_time - timedelta(seconds = self.__interval_length)
         
@@ -38,9 +38,3 @@ class HttpServer:
         response = await handler(request)
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
-    
-    def __init__(self):
-        self.app = web.Application(middlewares = [self.__middleware])
-
-    def run(self):
-        web.run_app(self.app, host = '127.0.0.1', port = 5000)

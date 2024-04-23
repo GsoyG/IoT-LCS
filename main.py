@@ -6,7 +6,8 @@ from httpserver import HttpServer
 from timingtask import TimingTask
 
 cli = MqttClient()
-task = TimingTask()
+srv = HttpServer()
+task = TimingTask(cli)
 
 # 首页
 async def handle_index(request):
@@ -62,16 +63,25 @@ async def set_timing_task(request):
         return web.Response(status = 400, text = result)
     return web.json_response({ 'status': 'OK'})
 
+# 异步入口
+async def init_app():
+    app = web.Application(middlewares = [srv.middleware])
+
+    app.router.add_get('/', handle_index)
+    app.router.add_get('/api/lighting/devices', get_device_list)
+    app.router.add_get('/api/lighting/setState', set_device_state)
+
+    app.router.add_get('/api/timing/tasks', get_timing_task)
+    app.router.add_get('/api/timing/setTask', set_timing_task)
+
+    task.init_scheduler()
+
+    return app
+
+# 主函数
 if __name__ == '__main__':
     with open('config.json', 'r') as config_file:
         config = json.load(config_file)
         cli.init(config['hostname'], config['username'], config['password'])
-
-    srv = HttpServer()
-    srv.app.router.add_get('/', handle_index)
-    srv.app.router.add_get('/api/lighting/devices', get_device_list)
-    srv.app.router.add_get('/api/lighting/setState', set_device_state)
-
-    srv.app.router.add_get('/api/timing/tasks', get_timing_task)
-    srv.app.router.add_get('/api/timing/setTask', set_timing_task)
-    srv.run()
+    
+    web.run_app(init_app(), host = '127.0.0.1', port = 5000)

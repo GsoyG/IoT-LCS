@@ -103,3 +103,8 @@ class MqttClient:
         if data != 'Done':
             return data
         return { 'status': 'OK'}
+    
+    # 设置多个设备状态信息
+    async def set_device_list_state(self, device_list, state):
+        for device in device_list:
+            await self.set_device_state_fast(device, state)
