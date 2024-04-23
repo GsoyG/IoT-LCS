@@ -25,7 +25,7 @@ class TimingTask:
         self.__scheduler.add_job(
                 self.__client.set_device_list_state,
                 'cron',
-                day_of_week = day_of_week,
+                day_of_week = day_of_week if day_of_week != '' else '*',
                 hour = time[0],
                 minute = time[1],
                 args = [task['devices'], task['action']],

@@ -182,8 +182,7 @@ onMounted(() => {
 function parseRepeatText(repeat) {
   const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
-  if (repeat.length === 7) return '每天'
-  if (repeat.length === 0) return '不重复'
+  if (repeat.length === 7 || repeat.length === 0) return '每天'
   if (repeat.length === 2 && [5, 6].every(i => repeat.includes(i))) return '每周末'
   if (repeat.length === 5 && [0, 1, 2, 3, 4].every(i => repeat.includes(i))) return '每周一至周五'
   let text = ''
