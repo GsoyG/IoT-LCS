@@ -36,7 +36,7 @@
             <v-dialog max-width="500">
               <template v-slot:activator="{ props: activatorProps }">
                 <v-btn v-bind="activatorProps" color="indigo-accent-2" icon="mdi-square-edit-outline"
-                  :disabled="!device.Reachable" @click="openEditDialog(device)"></v-btn>
+                  :disabled="!device.Reachable" @click="parseDeviceConfig(device)"></v-btn>
               </template>
 
               <template v-slot:default="{ isActive }">
@@ -105,22 +105,21 @@ onMounted(() => {
 
 // 得到设备状态文字
 function getStatusText(device) {
-  if (!device.Reachable) {
-    return '已离线'
-  }
-  if (device.Power) {
-    return '已开启'
-  }
+  if (!device.Reachable) return '已离线'
+  if (device.Power) return '已开启'
   return '已关闭'
 }
-
 // 显示提示消息条
-function showMessage(text, icon, iconColor) {
-  snackbarConfig.value = {
-    show: true,
-    text: text,
-    icon: 'mdi-' + icon,
-    iconColor: iconColor,
+function showMessage(text, type) {
+  switch (type) {
+    case 'success':
+      snackbarConfig.value = { show: true, text: text, icon: 'mdi-check-circle', iconColor: 'success' }
+      break;
+    case 'warning':
+      snackbarConfig.value = { show: true, text: text, icon: 'mdi-alert-circle', iconColor: 'warning' }
+      break;
+    default:
+      break;
   }
 }
 
@@ -132,37 +131,32 @@ async function fetchDeviceList() {
 
     // 检查设备照明模式
     deviceList.value.forEach(device => {
-      if (device.ColorMode == 2) {
+      if (device.ColorMode == 2)
         device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3)
-      }
     })
-    if (deviceList.value.length === 0) {
+    if (deviceList.value.length === 0)
       emptyInfo.value = {
         'heading': '设备列表为空',
         'subheading': '未绑定设备，请点击右下角按钮添加'
       }
-    }
   }).catch(error => {
-    if (error.response) {
+    if (error.response)
       emptyInfo.value = {
         'heading': '获取设备列表失败',
         'subheading': '请稍后再试，错误信息：' + error.response.data
       }
-    }
-    else {
+    else
       emptyInfo.value = {
         'heading': '网关连接出错',
         'subheading': '请检查网络连接或网关设备，错误信息：' + error.message
       }
-    }
   })
   disabledEdit.value = false
 }
 
 // 更新设备状态信息
 async function updateDeviceState(device, key, value, disabled = true) {
-  var state = {}
-  state[key] = value
+  const state = { [key]: value }
   let result = false
 
   if (disabled) disabledEdit.value = true
@@ -173,20 +167,17 @@ async function updateDeviceState(device, key, value, disabled = true) {
     },
   }).then(response => {
     Object.assign(device, state)
-
     // 检查是否切换电源状态
     if (key === 'Dimmer') {
       if (value < 2) device.Power = 0
       if (value > 1) device.Power = 1
     }
-
     result = true
   }).catch(error => {
     if (error.response)
-      showMessage('设置设备配置失败：' + error.response.data, 'alert-circle', 'warning')
-    else showMessage('设置设备配置出错：' + error.message, 'alert-circle', 'warning')
+      showMessage('设置设备配置失败：' + error.response.data, 'warning')
+    else showMessage('设置设备配置出错：' + error.message, 'warning')
   })
-
   if (disabled) disabledEdit.value = false
   return result
 }
@@ -204,26 +195,22 @@ function hslToRgb(h, s, l) {
   let r, g, b
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s
   const p = 2 * l - q
-
   r = Math.round(hueToRgb(p, q, h + 1 / 3) * 255)
   g = Math.round(hueToRgb(p, q, h) * 255)
   b = Math.round(hueToRgb(p, q, h - 1 / 3) * 255)
-
   return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
 }
 
 // 更新设备颜色信息
 async function updateDeviceColor(device, key, value) {
   let rgb = 'FFFFFF'
-  if (key != 'CT') {
+  if (key != 'CT') // 颜色模式为彩光模式
     rgb = hslToRgb(deviceConfig.value.Hue / 254, 1, 1 - deviceConfig.value.Sat / 254 / 2)
-  }
-  else rgb = hslToRgb(0.083, 1, 1 - value / 500 * 0.3)
+  else rgb = hslToRgb(0.083, 1, 1 - value / 500 * 0.3) // 颜色模式为白光模式
 
   deviceConfig.value.RGB = rgb
-  if (await updateDeviceState(device, key, value)) {
+  if (await updateDeviceState(device, key, value))
     device.RGB = rgb
-  }
 }
 
 // 切换设备开关状态
@@ -234,15 +221,15 @@ async function switchDevicePower(device) {
 
   // 切换后等待获取到设备最新状态后，获取最新状态列表
   if (await updateDeviceState(device, 'Power', power, false)) {
-    showMessage(text + '设备成功', 'check-circle', 'success')
+    showMessage(text + '设备成功', 'success')
     await new Promise(resolve => setTimeout(resolve, 2000))
     fetchDeviceList()
   }
   disabledEdit.value = false
 }
 
-// 打开设备编辑对话框
-function openEditDialog(device) {
+// 打开设备编辑对话框，解析设备配置
+function parseDeviceConfig(device) {
   deviceConfig.value = {
     'Dimmer': device.Dimmer,
     'RGB': device.RGB,
