@@ -3,10 +3,10 @@ from pathlib import Path
 from aiohttp import web
 from mqttclient import MqttClient
 from httpserver import HttpServer
-from database import DatabBase
+from timingtask import TimingTask
 
 cli = MqttClient()
-db = DatabBase()
+task = TimingTask()
 
 # 首页
 async def handle_index(request):
@@ -39,7 +39,7 @@ async def set_device_state(request):
 
 # 获取定时任务列表
 async def get_timing_task(request):
-    return web.json_response(db.getTable('TimingTask'))
+    return web.json_response(task.getTaskList())
 
 # 设置定时任务
 async def set_timing_task(request):
@@ -51,21 +51,15 @@ async def set_timing_task(request):
     
     # 操作定时任务项
     if action == 'add':
-        if db.checkItem('TimingTask', 'name', data['name']):
-            return web.Response(status = 400, text = '定时任务名称重复')
-        if data['name'] == '':
-            return web.Response(status = 400, text = '定时任务名称不能为空')
-        db.addItem('TimingTask', data)
+        result = task.addTask(data)
     elif action == 'delete':
-        if not db.checkItem('TimingTask', 'name', data['name']):
-            return web.Response(status = 400, text = '定时任务名称不存在')
-        db.deleteItem('TimingTask', 'name', data['name'])
+        result = task.deleteTask(data)
     elif action == 'update':
-        if not db.checkItem('TimingTask', 'name', data['name']):
-            return web.Response(status = 400, text = '定时任务名称不存在')
-        db.updateItem('TimingTask', 'name', data)
-    else:
-        return web.Response(status = 400, text = '参数错误：未知参数')
+        result = task.updateTask(data)
+    else: return web.Response(status = 400, text = '参数错误：未知操作')
+    
+    if result != 'OK':
+        return web.Response(status = 400, text = result)
     return web.json_response({ 'status': 'OK'})
 
 if __name__ == '__main__':
