@@ -39,7 +39,7 @@ async def set_device_state(request):
 
 # 获取定时任务列表
 async def get_timing_task(request):
-    return web.json_response(task.getTaskList())
+    return web.json_response(task.get_task_list())
 
 # 设置定时任务
 async def set_timing_task(request):
@@ -51,11 +51,11 @@ async def set_timing_task(request):
     
     # 操作定时任务项
     if action == 'add':
-        result = task.addTask(data)
+        result = task.add_task(data)
     elif action == 'delete':
-        result = task.deleteTask(data)
+        result = task.delete_task(data)
     elif action == 'update':
-        result = task.updateTask(data)
+        result = task.update_task(data)
     else: return web.Response(status = 400, text = '参数错误：未知操作')
     
     if result != 'OK':
