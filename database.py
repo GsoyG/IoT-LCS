@@ -11,6 +11,10 @@ class DatabBase:
         table = self.__db.table(table_name)
         return table.all()
     
+    def get_items(self, table_name, id_key, id_value):
+        table = self.__db.table(table_name)
+        return table.search(Query()[id_key] == id_value)
+    
     def add_item(self, table_name, data):
         table = self.__db.table(table_name)
         return table.insert(data)
