@@ -45,8 +45,7 @@
                 <v-card title="编辑定时任务">
                   <div class="mx-4 mt-4">
                     <v-text-field label="名称" v-model="taskConfig.name" disabled></v-text-field>
-                    <v-select v-model="taskConfig.devices" :items="['设备1', '设备2', '设备3', '设备4', '设备5', '设备6']"
-                      label="设备" multiple></v-select>
+                    <v-select v-model="taskConfig.devices" :items="deviceList" label="设备" multiple></v-select>
                     <v-select v-model="taskConfig.repeat" :items="['周一', '周二', '周三', '周四', '周五', '周六', '周日']" label="重复"
                       multiple></v-select>
                     <v-divider class="mb-4"></v-divider>
@@ -96,14 +95,14 @@
     <v-dialog max-width="500">
       <template v-slot:activator="{ props: activatorProps }">
         <v-btn v-bind="activatorProps" icon="mdi-plus" size="large" color="indigo"
-          style="position: fixed; bottom: 40px; right: 50px;"></v-btn>
+          style="position: fixed; bottom: 40px; right: 50px;" v-show="!emptyInfo.isDisconnect"></v-btn>
       </template>
 
       <template v-slot:default="{ isActive }">
         <v-card title="添加定时任务">
           <div class="mx-4 mt-4">
             <v-text-field label="名称" v-model="taskConfig.name"></v-text-field>
-            <v-select v-model="taskConfig.devices" :items="['设备1', '设备2']" label="设备" multiple></v-select>
+            <v-select v-model="taskConfig.devices" :items="deviceList" label="设备" multiple></v-select>
             <v-select v-model="taskConfig.repeat" :items="['周一', '周二', '周三', '周四', '周五', '周六', '周日']" label="重复"
               multiple></v-select>
             <v-divider class="mb-4"></v-divider>
@@ -145,6 +144,7 @@ import axios from 'axios'
 import { ref, onMounted } from 'vue'
 
 const taskList = ref([])
+const deviceList = ref([])
 const taskConfig = ref({
   'name': '',
   'devices': [],
@@ -157,7 +157,8 @@ const taskConfig = ref({
 })
 const emptyInfo = ref({ // 加载提示信息
   'heading': '获取定时任务列表中......',
-  'subheading': ''
+  'subheading': '',
+  'isDisconnect': true
 })
 const snackbarConfig = ref({ // 提示消息条信息
   'show': false,
@@ -172,6 +173,7 @@ const deleteDialog = ref({ // 删除对话框信息
 
 onMounted(() => {
   fetchTaskList()
+  fetchDeviceList()
 })
 
 // 获取重复文本
@@ -211,6 +213,17 @@ function showMessage(text, type) {
   }
 }
 
+// 获取设备列表
+async function fetchDeviceList() {
+  await axios.get('/api/lighting/devices', { timeout: 4000 }).then(response => {
+    response.data.every(device => deviceList.value.push(device.Device))
+  }).catch(error => {
+    if (error.response)
+      showMessage('获取设备列表失败：' + error.response.data, 'warning')
+    else showMessage('获取设备列表出错：' + error.message, 'warning')
+  });
+}
+
 // 获取定时任务列表
 async function fetchTaskList() {
   await axios.get('/api/timing/tasks').then(response => {
@@ -221,6 +234,7 @@ async function fetchTaskList() {
         'heading': '定时任务列表为空',
         'subheading': '未添加定时任务，请点击右下角按钮添加'
       }
+    emptyInfo.value.isDisconnect = false
   }).catch(error => {
     if (error.response)
       emptyInfo.value = {
@@ -232,6 +246,7 @@ async function fetchTaskList() {
         'heading': '网络连接出错',
         'subheading': '请检查网络连接，错误信息：' + error.message
       }
+    emptyInfo.value.isDisconnect = true
   })
 }
 
