@@ -45,7 +45,8 @@
                 <v-card title="编辑定时任务">
                   <div class="mx-4 mt-4">
                     <v-text-field label="名称" v-model="taskConfig.name" disabled></v-text-field>
-                    <v-select v-model="taskConfig.devices" :items="deviceList" label="设备" multiple></v-select>
+                    <v-select v-model="taskConfig.devices" :items="deviceList" label="设备" multiple
+                      no-data-text="无可用设备"></v-select>
                     <v-select v-model="taskConfig.repeat" :items="['周一', '周二', '周三', '周四', '周五', '周六', '周日']" label="重复"
                       multiple></v-select>
                     <v-divider class="mb-4"></v-divider>
@@ -102,7 +103,8 @@
         <v-card title="添加定时任务">
           <div class="mx-4 mt-4">
             <v-text-field label="名称" v-model="taskConfig.name"></v-text-field>
-            <v-select v-model="taskConfig.devices" :items="deviceList" label="设备" multiple></v-select>
+            <v-select v-model="taskConfig.devices" :items="deviceList" label="设备" multiple
+              no-data-text="无可用设备"></v-select>
             <v-select v-model="taskConfig.repeat" :items="['周一', '周二', '周三', '周四', '周五', '周六', '周日']" label="重复"
               multiple></v-select>
             <v-divider class="mb-4"></v-divider>
