@@ -9,8 +9,8 @@ class TimingTask:
     def __init__(self, mqtt_client):
         self.__client = mqtt_client
 
-    # 初始化定时任务
-    def init_scheduler(self):
+    # 设置启动定时任务
+    def setup_scheduler(self):
         self.__scheduler = AsyncIOScheduler()
         for task in self.__db.get_table():
             self.__add_schedule_job(task)

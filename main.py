@@ -4,6 +4,7 @@ from aiohttp import web
 from mqttclient import MqttClient
 from httpserver import HttpServer
 from timingtask import TimingTask
+from aiohttp_session import get_session, new_session
 
 cli = MqttClient()
 srv = HttpServer()
@@ -16,6 +17,31 @@ async def handle_index(request):
     return web.FileResponse(index_html_path, headers = {
         'Cache-Control': 'no-cache',
     })
+
+# 登录
+async def handle_login(request):
+    try: # 检查参数
+        data = await request.json()
+    except json.decoder.JSONDecodeError:
+        return web.Response(status = 400, text = '参数错误：参数格式错误')
+    
+    username = data.get('username')
+    password = data.get('password')
+    if not (username and password):
+        return web.Response(status = 400, text = '参数错误：缺少用户名或密码')
+
+    if username == 'admin' and password == 'password':
+        session = await new_session(request)
+        session['user'] = { 'username': username }
+        return web.json_response({ 'status': 'OK' })
+    else: return web.Response(status = 401, text = '用户名或密码错误')
+
+# 登出
+async def handle_logout(request):
+    session = await get_session(request)
+    if "user" in session:
+        del session["user"]
+    return web.json_response({ 'status': 'OK' })
 
 # 获取设备列表
 async def get_device_list(request):
@@ -61,20 +87,25 @@ async def set_timing_task(request):
     
     if result != 'OK':
         return web.Response(status = 400, text = result)
-    return web.json_response({ 'status': 'OK'})
+    return web.json_response({ 'status': 'OK' })
 
 # 异步入口
 async def init_app():
-    app = web.Application(middlewares = [srv.middleware])
+    app = web.Application(middlewares = [srv.limit_middleware])
+    srv.setup_session(app)
+    # app.middlewares.append(srv.auth_middleware)
 
     app.router.add_get('/', handle_index)
+    app.router.add_post('/api/login', handle_login)
+    app.router.add_post("/api/logout", handle_logout)
+
     app.router.add_get('/api/lighting/devices', get_device_list)
     app.router.add_get('/api/lighting/setState', set_device_state)
 
     app.router.add_get('/api/timing/tasks', get_timing_task)
     app.router.add_get('/api/timing/setTask', set_timing_task)
 
-    task.init_scheduler()
+    task.setup_scheduler()
 
     return app
 
