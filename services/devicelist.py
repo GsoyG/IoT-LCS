@@ -11,7 +11,7 @@ if sys.platform.lower() == "win32" or os.name.lower() == "nt":
     from asyncio import set_event_loop_policy, WindowsSelectorEventLoopPolicy
     set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
-class MqttClient:
+class DeviceList:
     __gateway_name = 'ZigbeeGateway'
     __hostData = {
         'hostname': '',
@@ -23,18 +23,22 @@ class MqttClient:
     __isConnected = False
 
     # 初始化客户端字段
-    def init(self, hostname, username, password):
+    def __init__(self):
+        # 生成ID
         characters = string.ascii_letters + string.digits
         id_string = ''.join(random.choice(characters) for _ in range(6))
         identifier = 'LCS_' + id_string
-
-        self.__hostData['hostname'] = hostname
-        self.__hostData['username'] = username
-        self.__hostData['password'] = password
         self.__hostData['identifier'] = identifier
+        
+        # 读取配置
+        with open('config.json', 'r') as config_file:
+            config = json.load(config_file)
+            self.__hostData['hostname'] = config['hostname']
+            self.__hostData['username'] = config['username']
+            self.__hostData['password'] = config['password']
 
     # 发送消息并返回响应
-    async def send(self, command, subscribe, message_header, payload = None):
+    async def __send(self, command, subscribe, message_header, payload = None):
         if self.__isConnected:
             return "上一个请求的连接未关闭"
 
@@ -70,7 +74,7 @@ class MqttClient:
     # 获取设备列表
     async def get_device_list(self):
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
-        data = await self.send('ZbInfo', subscribe, 'ZbInfo')
+        data = await self.__send('ZbInfo', subscribe, 'ZbInfo')
         if isinstance(data, str):
             return data
 
@@ -87,7 +91,7 @@ class MqttClient:
             'Device': device,
             'Send': state
         }
-        data = await self.send('ZbSend', subscribe, 'ZbReceived', payload)
+        data = await self.__send('ZbSend', subscribe, 'ZbReceived', payload)
         if isinstance(data, str):
             return data
         return data[device]
@@ -99,7 +103,7 @@ class MqttClient:
             'Device': device,
             'Send': state
         }
-        data = await self.send('ZbSend', subscribe, 'ZbSend', payload)
+        data = await self.__send('ZbSend', subscribe, 'ZbSend', payload)
         if data != 'Done':
             return data
         return { 'status': 'OK'}

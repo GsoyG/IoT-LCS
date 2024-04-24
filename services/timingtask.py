@@ -1,4 +1,4 @@
-from database import DatabBase
+from .database import DatabBase
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 class TimingTask:
