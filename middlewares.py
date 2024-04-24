@@ -27,6 +27,7 @@ async def limit_middleware(request, handler):
     # 添加新请求计数
     request_counts.append(current_time)
 
+    # 允许跨站访问
     response = await handler(request)
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
@@ -34,7 +35,9 @@ async def limit_middleware(request, handler):
 # 认证中间件
 @middleware
 async def auth_middleware(request, handler):
-    session = await get_session(request)
-    if "user" not in session:
-        return web.Response(status = 401, text = '没有权限访问')
+    # 登录接口以外验证身份
+    if request.path != '/api/login':
+        session = await get_session(request)
+        if "user" not in session:
+            return web.Response(status = 401, text = '没有权限访问')
     return await handler(request)

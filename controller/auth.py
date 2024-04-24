@@ -11,12 +11,12 @@ async def login(request):
         data = await request.json()
     except json.decoder.JSONDecodeError:
         return web.Response(status = 400, text = '参数错误：参数格式错误')
-    
     username = data.get('username')
     password = data.get('password')
     if not (username and password):
         return web.Response(status = 400, text = '参数错误：缺少用户名或密码')
 
+    # 检查用户名和密码
     if username == 'admin' and password == 'password':
         session = await new_session(request)
         session['user'] = { 'username': username }

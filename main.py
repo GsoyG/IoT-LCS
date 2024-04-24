@@ -34,11 +34,10 @@ async def init_app():
     timing_controller.task = task
     app = web.Application(middlewares = [mid.limit_middleware])
 
-    # 配置会话
+    # 配置认证会话
     session_key = base64.urlsafe_b64decode(Fernet.generate_key())
-    setup(app,  EncryptedCookieStorage(session_key))
-
-    # app.middlewares.append(mid.auth_middleware)
+    setup(app,  EncryptedCookieStorage(session_key, cookie_name = 'session'))
+    app.middlewares.append(mid.auth_middleware)
 
     # 添加路由
     app.router.add_get('/', handle_index)
