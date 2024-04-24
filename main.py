@@ -1,4 +1,3 @@
-import json
 import base64
 import logging
 import middlewares as mid
@@ -21,7 +20,6 @@ aiohttp_logger.setLevel(logging.DEBUG)
 # 首页
 async def handle_index(request):
     index_html_path = Path(__file__).parent.resolve() / 'static' / 'index.html'
-
     return web.FileResponse(index_html_path, headers = {
         'Cache-Control': 'no-cache',
     })

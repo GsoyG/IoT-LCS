@@ -18,46 +18,55 @@ class TimingTask:
 
     # 添加定时任务事务
     def __add_schedule_job(self, task):
-        if not task['enable']:
-            return
+        if not task['enable']: return
+
         day_of_week = ",".join([str(i) for i in task['repeat']])
         time = task['time'].split(':')
         self.__scheduler.add_job(
-                self.__client.set_device_list_state,
-                'cron',
-                day_of_week = day_of_week if day_of_week != '' else '*',
-                hour = time[0],
-                minute = time[1],
-                args = [task['devices'], task['action']],
-                id = task['name']
-            )
+            self.__client.set_device_list_state,
+            'cron',
+            day_of_week = day_of_week if day_of_week != '' else '*',
+            hour = time[0],
+            minute = time[1],
+            args = [task['devices'], task['action']],
+            id = task['name']
+        )
 
     def get_task_list(self):
         return self.__db.get_table()
     
     def add_task(self, task):
+        # 检查参数
         name = task['name']
         if self.__db.check_item('name', name):
             return '定时任务名称重复'
         if name == '':
             return '定时任务名称不能为空'
+        
+        # 添加任务
         self.__db.add_item(task)
         self.__add_schedule_job(task)
         return 'OK'
     
     def delete_task(self, task):
+        # 检查参数
         name = task['name']
         if not self.__db.check_item('name', name):
             return '定时任务名称不存在'
+        
+        # 检查任务是否已经启动
         if self.__db.get_items('name', name)[0]['enable']:
             self.__scheduler.remove_job(name)
         self.__db.delete_item('name', name)
         return 'OK'
     
     def update_task(self, task):
+        # 检查参数
         name = task['name']
         if not self.__db.check_item('name', name):
             return '定时任务名称不存在'
+        
+        # 检查任务是否已经启动
         if self.__db.get_items('name', name)[0]['enable']:
             self.__scheduler.remove_job(name)
         self.__db.update_item('name', task)

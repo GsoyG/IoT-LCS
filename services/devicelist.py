@@ -47,7 +47,7 @@ class DeviceList:
             username = self.__hostData['username'],
             password =  self.__hostData['password'],
             identifier = self.__hostData['identifier']
-        )as client:
+        ) as client:
             self.__isConnected = True
 
             # 订阅消息
@@ -73,12 +73,12 @@ class DeviceList:
 
     # 获取设备列表
     async def get_device_list(self):
+        # 发送消息并检查返回
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
         data = await self.__send('ZbInfo', subscribe, 'ZbInfo')
-        if isinstance(data, str):
-            return data
+        if isinstance(data, str): return data
 
-        # 更新本地设备列表
+        # 更新设备列表
         self.__device_list.clear()
         for key, value in data.items():
             self.__device_list.append(value)
@@ -86,26 +86,22 @@ class DeviceList:
     
     # 设置设备状态信息
     async def set_device_state(self, device, state):
+        # 发送消息并检查返回
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
-        payload = {
-            'Device': device,
-            'Send': state
-        }
+        payload = { 'Device': device, 'Send': state }
         data = await self.__send('ZbSend', subscribe, 'ZbReceived', payload)
-        if isinstance(data, str):
-            return data
+        if isinstance(data, str): return data
+
         return data[device]
     
     # 设置设备状态信息，无需等待响应消息，响应快两倍
     async def set_device_state_fast(self, device, state):
+        # 发送消息并检查返回
         subscribe = 'stat/' + self.__gateway_name + '/RESULT'
-        payload = {
-            'Device': device,
-            'Send': state
-        }
+        payload = { 'Device': device, 'Send': state }
         data = await self.__send('ZbSend', subscribe, 'ZbSend', payload)
-        if data != 'Done':
-            return data
+        if data != 'Done': return data
+
         return { 'status': 'OK'}
     
     # 设置多个设备状态信息
