@@ -2,7 +2,8 @@
   <v-app>
     <v-main>
       <v-container class="d-flex flex-row fill-height justify-center align-center">
-        <canvas id="canvas" class="position-absolute d-flex flex-row fill-height justify-center align-center"></canvas>
+        <canvas id="canvas" class="position-absolute d-flex flex-row fill-height justify-center align-center"
+          style="height: 100%; width: 100%;"></canvas>
         <v-row>
           <v-col cols="12">
             <v-card class="mx-auto pa-6" max-width="450" elevation="8">
@@ -56,7 +57,7 @@ const tooltipConfig = ref({
   'iconColor': '',
 })
 
-// 显示提示温习
+// 显示提示文字
 function showMessage(text, type) {
   switch (type) {
     case 'success':
@@ -118,6 +119,8 @@ onMounted(() => {
   let count = 70;
   let blur = [20, 70];
   let radius = [10, 120];
+
+  if (window.innerWidth < 600) count = 30;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.globalCompositeOperation = 'lighter';
