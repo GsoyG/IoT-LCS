@@ -12,12 +12,12 @@
   <div id="app"></div>
   <script type="module">
     import { registerPlugins } from '@/plugins'
-    import Login from '/src/Login.vue'
     import { createApp } from 'vue'
-    import axios from 'axios';
+    import Login from '/src/Login.vue'
+    import axios from 'axios'
 
-    axios.defaults.baseURL = 'http://127.0.0.1:5000';
-    axios.defaults.timeout = 3000;
+    axios.defaults.baseURL = 'http://127.0.0.1:5000'
+    axios.defaults.timeout = 3000
 
     const app = createApp(Login)
     registerPlugins(app)

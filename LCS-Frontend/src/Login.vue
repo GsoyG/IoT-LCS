@@ -18,8 +18,11 @@
                   :type="rules.passwordShow ? 'text' : 'password'"
                   @click:append="rules.passwordShow = !rules.passwordShow"></v-text-field>
 
-                <br>
-                <v-btn text="登录" :disabled="!data.form" :loading="data.loading" color="indigo" size="large"
+                <div class="text-center mt-2" v-if="tooltipConfig.show">
+                  <v-icon :icon="tooltipConfig.icon" :color="tooltipConfig.iconColor" class="mr-2"></v-icon>
+                  {{ tooltipConfig.text }}
+                </div>
+                <v-btn class="mt-4" text="登录" :disabled="!data.form" :loading="data.loading" color="indigo" size="large"
                   type="submit" variant="elevated" block></v-btn>
               </v-form>
             </v-card>
@@ -31,6 +34,7 @@
 </template>
 
 <script setup>
+import axios from 'axios'
 import { ref, onMounted } from 'vue'
 
 const data = ref({
@@ -45,11 +49,44 @@ const rules = ref({
   'passwordMin': value => value.length >= 8 || '密码长度不能小于8位',
   'passwordShow': false
 })
+const tooltipConfig = ref({
+  'show': false,
+  'text': '',
+  'icon': '',
+  'iconColor': '',
+})
 
-function login() {
+// 显示提示温习
+function showMessage(text, type) {
+  switch (type) {
+    case 'success':
+      tooltipConfig.value = { show: true, text: text, icon: 'mdi-check-circle', iconColor: 'success' }
+      break;
+    case 'warning':
+      tooltipConfig.value = { show: true, text: text, icon: 'mdi-alert-circle', iconColor: 'warning' }
+      break;
+    default:
+      break;
+  }
+}
+
+// 登录
+async function login() {
   if (!data.value.form) return
+
   data.value.loading = true
-  setTimeout(() => (data.value.loading = false), 2000)
+  await axios.post('/api/login', {
+    username: data.value.username,
+    password: data.value.password
+  }).then(response => {
+    showMessage('登录成功', 'success')
+    window.location.href = "http://127.0.0.1:3000/";
+  }).catch(error => {
+    if (error.response)
+      showMessage('登录失败 ' + error.response.data, 'warning')
+    else showMessage('登录出错 ' + error.message, 'warning')
+  });
+  data.value.loading = false
 }
 
 // 背景动画
