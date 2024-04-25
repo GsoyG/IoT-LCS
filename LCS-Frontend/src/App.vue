@@ -18,7 +18,6 @@ const routes = {
   '/device': DeviceList,
   '/timing': TimingTask,
 }
-
 const currentPath = ref(window.location.hash)
 
 window.addEventListener('hashchange', () => {
