@@ -26,11 +26,7 @@ async def limit_middleware(request, handler):
 
     # 添加新请求计数
     request_counts.append(current_time)
-
-    # 允许跨站访问
-    response = await handler(request)
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
+    return await handler(request)
 
 # 认证中间件
 @middleware

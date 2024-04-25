@@ -1,6 +1,7 @@
 import base64
 import logging
 import middlewares as mid
+import aiohttp_cors
 from pathlib import Path
 from aiohttp import web
 from aiohttp_session import setup
@@ -44,6 +45,17 @@ async def init_app():
     app.add_routes(auth_controller.routes)
     app.add_routes(timing_controller.routes)
     app.add_routes(device_controller.routes)
+
+    # 配置 CORS 跨域访问
+    cors = aiohttp_cors.setup(app, defaults = {
+        "*": aiohttp_cors.ResourceOptions(
+            allow_credentials = True,
+            expose_headers = "*",
+            allow_headers = "*",
+        )
+    })
+    for route in list(app.router.routes()):
+        cors.add(route)
 
     return app
 
