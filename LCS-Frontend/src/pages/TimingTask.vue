@@ -186,7 +186,7 @@ function parseRepeatText(repeat) {
   if (repeat.length === 2 && [5, 6].every(i => repeat.includes(i))) return '每周末'
   if (repeat.length === 5 && [0, 1, 2, 3, 4].every(i => repeat.includes(i))) return '每周一至周五'
   let text = ''
-  repeat.forEach(day => text += days[day] + '、');
+  repeat.forEach(day => text += days[day] + '、')
   return text.substring(0, text.length - 1)
 }
 // 获取操作文本
@@ -205,12 +205,12 @@ function showMessage(text, type) {
   switch (type) {
     case 'success':
       snackbarConfig.value = { show: true, text: text, icon: 'mdi-check-circle', iconColor: 'success' }
-      break;
+      break
     case 'warning':
       snackbarConfig.value = { show: true, text: text, icon: 'mdi-alert-circle', iconColor: 'warning' }
-      break;
+      break
     default:
-      break;
+      break
   }
 }
 
@@ -222,7 +222,7 @@ async function fetchDeviceList() {
     if (error.response)
       showMessage('获取设备列表失败：' + error.response.data, 'warning')
     else showMessage('获取设备列表出错：' + error.message, 'warning')
-  });
+  })
 }
 
 // 获取定时任务列表
@@ -264,7 +264,7 @@ async function setTaskRequest(action, data, infoText) {
     if (error.response)
       showMessage(infoText + '任务失败：' + error.response.data, 'warning')
     else showMessage(infoText + '任务出错：' + error.message, 'warning')
-  });
+  })
   fetchTaskList()
 }
 

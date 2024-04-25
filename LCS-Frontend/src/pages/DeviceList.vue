@@ -114,12 +114,12 @@ function showMessage(text, type) {
   switch (type) {
     case 'success':
       snackbarConfig.value = { show: true, text: text, icon: 'mdi-check-circle', iconColor: 'success' }
-      break;
+      break
     case 'warning':
       snackbarConfig.value = { show: true, text: text, icon: 'mdi-alert-circle', iconColor: 'warning' }
-      break;
+      break
     default:
-      break;
+      break
   }
 }
 

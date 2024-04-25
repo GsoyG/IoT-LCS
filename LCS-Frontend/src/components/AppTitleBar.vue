@@ -60,7 +60,7 @@
 import axios from 'axios'
 import { ref } from 'vue'
 
-const userData = ref({ // 用户数据
+const userData = ref({
   'user': 'Gsoy',
   'qq': '2754205302',
   'email': 'GsoyG@icloud.com',

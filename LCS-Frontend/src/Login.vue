@@ -41,7 +41,7 @@
 import axios from 'axios'
 import { ref, onMounted } from 'vue'
 
-const data = ref({  // 登录数据
+const data = ref({
   'form': false,
   'username': null,
   'password': null,
