@@ -116,11 +116,9 @@ onMounted(() => {
     ['#00ff00', '#eeff00'],
     ['#00ff00', '#00ffc1'],
   ];
-  let count = 70;
+  let count = window.innerWidth < 600 ? 30 : 70;
   let blur = [20, 70];
   let radius = [10, 120];
-
-  if (window.innerWidth < 600) count = 30;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.globalCompositeOperation = 'lighter';
