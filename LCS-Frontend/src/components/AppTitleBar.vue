@@ -29,13 +29,9 @@
               <h2 class="mt-2">{{ userData.user }}</h2>
               <p class="mt-2">{{ userData.email }}</p>
               <v-divider class="my-2"></v-divider>
-              <v-btn variant="text" rounded>
-                编辑信息
-              </v-btn>
+              <v-btn text="编辑信息" variant="text" rounded></v-btn>
               <v-divider class="my-2"></v-divider>
-              <v-btn variant="text" rounded>
-                退出登录
-              </v-btn>
+              <v-btn text="退出登入" variant="text" rounded @click="logout"></v-btn>
             </div>
           </v-card-text>
         </v-card>
@@ -52,16 +48,54 @@
   <v-navigation-drawer v-model="rail" temporary @click="rail = false" v-if="$vuetify.display.mobile">
     <AppNavList />
   </v-navigation-drawer>
+
+  <!-- 提示消息条 -->
+  <v-snackbar timeout="2000" v-model="snackbarConfig.show" color="indigo">
+    <v-icon :icon="snackbarConfig.icon" :color="snackbarConfig.iconColor" class="mr-2"></v-icon>
+    {{ snackbarConfig.text }}
+  </v-snackbar>
 </template>
 
 <script setup>
+import axios from 'axios'
 import { ref } from 'vue'
 
-const userData = ref({
+const userData = ref({ // 用户数据
   'user': 'Gsoy',
   'qq': '2754205302',
   'email': 'GsoyG@icloud.com',
 })
-const drawer = ref(true)
-const rail = ref(false)
+const drawer = ref(true) // 折叠侧边栏
+const rail = ref(false) // 显示侧边栏
+const snackbarConfig = ref({ // 提示消息条信息
+  'show': false,
+  'text': '',
+  'icon': '',
+  'iconColor': '',
+})
+
+// 显示提示消息条
+function showMessage(text, type) {
+  switch (type) {
+    case 'success':
+      snackbarConfig.value = { show: true, text: text, icon: 'mdi-check-circle', iconColor: 'success' }
+      break;
+    case 'warning':
+      snackbarConfig.value = { show: true, text: text, icon: 'mdi-alert-circle', iconColor: 'warning' }
+      break;
+    default:
+      break;
+  }
+}
+
+// 登出
+async function logout() {
+  await axios.post('/api/logout').then(response => {
+    window.location.href = "http://127.0.0.1:3000/login";
+  }).catch(error => {
+    if (error.response)
+      showMessage('退出登入失败 ' + error.response.data, 'warning')
+    else showMessage('退出登入出错 ' + error.message, 'warning')
+  });
+}
 </script>
