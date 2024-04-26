@@ -1,8 +1,16 @@
 import json
+from services.database import DatabBase
 from aiohttp import web
 from aiohttp_session import new_session, get_session
 
 routes = web.RouteTableDef()
+
+__db = DatabBase('user_info')
+
+def __check_user(username, password):
+    user = __db.get_items('username', username)[0]
+    if user['password'] == password: return True
+    return False
 
 # 登入
 @routes.post('/api/login')
@@ -17,7 +25,7 @@ async def login(request):
         return web.Response(status = 400, text = '参数错误：缺少用户名或密码')
 
     # 检查用户名和密码
-    if username == 'admin' and password == 'password':
+    if __check_user(username, password):
         session = await new_session(request)
         session['user'] = { 'username': username }
         return web.json_response({ 'status': 'OK' })
@@ -30,3 +38,14 @@ async def logout(request):
     if "user" in session:
         del session["user"]
     return web.json_response({ 'status': 'OK' })
+
+# 获取用户信息
+@routes.get('/api/user/info')
+async def get_user_info(request):
+    session = await get_session(request)
+    user = __db.get_items('username', session["user"]['username'])[0]
+    return web.json_response({
+        'username': user['username'],
+        'qq': user['qq'],
+        'email': user['email']
+    })
