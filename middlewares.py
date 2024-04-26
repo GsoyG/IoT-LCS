@@ -4,7 +4,7 @@ from collections import deque
 from datetime import datetime, timedelta
 from aiohttp_session import get_session
 
-limit_per_interval = 60  # 每个时间间隔允许的最大请求次数
+limit_per_interval = 100  # 每个时间间隔允许的最大请求次数
 interval_length = 60  # 时间间隔，单位：秒
 request_counts = deque(maxlen = interval_length) # 存储请求计数的队列，用于滑动窗口算法
 
