@@ -1,0 +1,7 @@
+# 窗口配置文件
+/settings
+
+# 输出文件
+/CoordinatorEB
+/RouterEB
+/EndDeviceEB

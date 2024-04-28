@@ -804,7 +804,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>GenericApp.d51</state>
+                    <state>SmartLight.d51</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
@@ -1002,7 +1002,7 @@
                 </option>
                 <option>
                     <name>ExtraOutputFile</name>
-                    <state>GenericApp.sim</state>
+                    <state>SmartLight.sim</state>
                 </option>
                 <option>
                     <name>ExtraOutputFormat</name>
@@ -1975,7 +1975,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>GenericApp.d51</state>
+                    <state>SmartLight.d51</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
@@ -2173,7 +2173,7 @@
                 </option>
                 <option>
                     <name>ExtraOutputFile</name>
-                    <state>GenericApp.sim</state>
+                    <state>SmartLight.sim</state>
                 </option>
                 <option>
                     <name>ExtraOutputFormat</name>
@@ -3150,7 +3150,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>GenericApp.d51</state>
+                    <state>SmartLight.d51</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
@@ -3348,7 +3348,7 @@
                 </option>
                 <option>
                     <name>ExtraOutputFile</name>
-                    <state>GenericApp.sim</state>
+                    <state>SmartLight.sim</state>
                 </option>
                 <option>
                     <name>ExtraOutputFormat</name>
@@ -3523,16 +3523,16 @@
     <group>
         <name>App</name>
         <file>
-            <name>$PROJ_DIR$\source\OSAL_GenericApp.c</name>
+            <name>$PROJ_DIR$\source\OSAL_SmartLight.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\source\zcl_genericapp.c</name>
+            <name>$PROJ_DIR$\source\ZCL_SmartLight.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\source\zcl_genericapp.h</name>
+            <name>$PROJ_DIR$\source\ZCL_SmartLight.h</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\source\zcl_genericapp_data.c</name>
+            <name>$PROJ_DIR$\source\ZCL_SmartLight_data.c</name>
         </file>
     </group>
     <group>

@@ -2,25 +2,25 @@
 
 <workspace>
   <project>
-    <path>$WS_DIR$\GenericApp.ewp</path>
+    <path>$WS_DIR$\SmartLight.ewp</path>
   </project>
   <batchBuild>
     <batchDefinition>
       <name>ALL</name>
       <member>
-        <project>GenericApp</project>
+        <project>SmartLight</project>
         <configuration>CoordinatorEB</configuration>
       </member>
       <member>
-        <project>GenericApp</project>
+        <project>SmartLight</project>
         <configuration>RouterEB</configuration>
       </member>
       <member>
-        <project>GenericApp</project>
+        <project>SmartLight</project>
         <configuration>EndDeviceEB</configuration>
       </member>
       <member>
-        <project>GenericApp</project>
+        <project>SmartLight</project>
         <configuration>RouterZLight</configuration>
       </member>
     </batchDefinition>
