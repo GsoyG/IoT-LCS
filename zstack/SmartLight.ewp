@@ -1971,11 +1971,11 @@
                 </option>
                 <option>
                     <name>XOutOverride</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>SmartLight.d51</state>
+                    <state>SmartLight.hex</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
@@ -2149,7 +2149,7 @@
                 </option>
                 <option>
                     <name>DebugInformation</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>RuntimeControl</name>
@@ -3522,6 +3522,15 @@
     </configuration>
     <group>
         <name>App</name>
+        <group>
+            <name>HAL</name>
+            <file>
+                <name>$PROJ_DIR$\source\HAL\HAL_WsLed.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\source\HAL\HAL_WsLed.h</name>
+            </file>
+        </group>
         <file>
             <name>$PROJ_DIR$\source\OSAL_SmartLight.c</name>
         </file>

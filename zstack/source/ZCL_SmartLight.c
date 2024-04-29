@@ -39,6 +39,7 @@
 #include "hal_lcd.h"
 #include "hal_led.h"
 #include "hal_key.h"
+#include "HAL/HAL_WsLed.h"
 
 /*********************************************************************
  * MACROS
@@ -241,7 +242,11 @@ void zclSmartLight_Init( byte task_id )
   HalLcdWriteString ( (char *)sDeviceName, HAL_LCD_LINE_3 );
 #endif  // LCD_SUPPORTED
 
+  // Start BDB Commissioning
+  uint8 bdbComissioningModes = (BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_NWK_FORMATION | BDB_COMMISSIONING_MODE_FINDING_BINDING);
+  bdb_StartCommissioning(bdbComissioningModes);
 
+  HalWsLedInit();
 }
 
 /*********************************************************************
