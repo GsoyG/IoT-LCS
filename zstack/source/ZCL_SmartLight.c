@@ -32,7 +32,6 @@
 
 #include "onboard.h"
 
-#include "hal_lcd.h"
 #include "hal_led.h"
 #include "hal_key.h"
 #include "HAL/HAL_WsLed.h"
@@ -41,8 +40,6 @@
 byte zclSmartLight_TaskID;
 
 // LOCAL VARIABLES
-uint8 giSmartLightScreenMode = SMARTLIGHT_MAINMODE; // display the main screen mode first
-
 uint8 gPermitDuration = 0; // permit joining default to disabled
 
 devStates_t zclSmartLight_NwkState = DEV_INIT;
@@ -57,13 +54,6 @@ static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable );
 #endif
 
 static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg);
-
-// app display functions
-static void zclSmartLight_LcdDisplayUpdate( void );
-#ifdef LCD_SUPPORTED
-static void zclSmartLight_LcdDisplayMainMode( void );
-static void zclSmartLight_LcdDisplayHelpMode( void );
-#endif
 
 // Functions to process ZCL Foundation incoming Command/Response messages
 static void zclSmartLight_ProcessIncomingMsg( zclIncomingMsg_t *msg );
@@ -81,15 +71,6 @@ static uint8 zclSmartLight_ProcessInDiscAttrsExtRspCmd( zclIncomingMsg_t *pInMsg
 #endif
 
 static void zclSampleApp_BatteryWarningCB( uint8 voltLevel);
-
-// STATUS STRINGS
-#ifdef LCD_SUPPORTED
-const char sDeviceName[]   = "  SmartLight";
-const char sClearLine[]    = " ";
-const char sSwSmartLight[] = "SW1:SMARTLIGHT_TODO"; // SMARTLIGHT_TODO
-const char sSwBDBMode[]    = "SW2: Start BDB";
-char sSwHelp[]             = "SW4: Help       "; // last character is * if NWK open
-#endif
 
 // ZCL General Profile Callback table
 static zclGeneral_AppCallbacks_t zclSmartLight_CmdCallbacks = {
@@ -191,15 +172,11 @@ void zclSmartLight_Init( byte task_id ) {
   }
 #endif
 
-#ifdef LCD_SUPPORTED
-  HalLcdWriteString ( (char *)sDeviceName, HAL_LCD_LINE_3 );
-#endif // LCD_SUPPORTED
-
   // Start BDB Commissioning
   uint8 bdbComissioningModes = (BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_NWK_FORMATION | BDB_COMMISSIONING_MODE_FINDING_BINDING);
   bdb_StartCommissioning(bdbComissioningModes);
 
-  HalWsLedInit();
+  Hal_WsLed_Init();
 }
 
 // Event Loop Processor for zclGeneral.
@@ -220,13 +197,6 @@ uint16 zclSmartLight_event_loop( uint8 task_id, uint16 events ) {
           break;
         case ZDO_STATE_CHANGE:
           zclSmartLight_NwkState = (devStates_t)(MSGpkt->hdr.status);
-          // now on the network
-          if ( (zclSmartLight_NwkState == DEV_ZB_COORD) ||
-               (zclSmartLight_NwkState == DEV_ROUTER)   ||
-               (zclSmartLight_NwkState == DEV_END_DEVICE) ) {
-            giSmartLightScreenMode = SMARTLIGHT_MAINMODE;
-            zclSmartLight_LcdDisplayUpdate();
-          }
           break;
         default:
           break;
@@ -236,12 +206,6 @@ uint16 zclSmartLight_event_loop( uint8 task_id, uint16 events ) {
     return (events ^ SYS_EVENT_MSG); // return unprocessed events
   }
 
-  if ( events & SMARTLIGHT_MAIN_SCREEN_EVT ) {
-    giSmartLightScreenMode = SMARTLIGHT_MAINMODE;
-    zclSmartLight_LcdDisplayUpdate();
-
-    return ( events ^ SMARTLIGHT_MAIN_SCREEN_EVT );
-  }
 #if ZG_BUILD_ENDDEVICE_TYPE
   if ( events & SMARTLIGHT_END_DEVICE_REJOIN_EVT ) {
     bdb_ZedAttemptRecoverNwk();
@@ -276,8 +240,6 @@ static void zclSmartLight_HandleKeys( byte shift, byte keys ) {
   if ( keys & HAL_KEY_SW_1 ) {
     static bool LED_OnOff = FALSE;
     
-    giSmartLightScreenMode = SMARTLIGHT_MAINMODE;
-    
     /* SMARTLIGHT_TODO: add app functionality to hardware keys here */
     
     // for example, start/stop LED 2 toggling with 500ms period
@@ -296,67 +258,17 @@ static void zclSmartLight_HandleKeys( byte shift, byte keys ) {
     }
   }
   // Start the BDB commissioning method
-  if ( keys & HAL_KEY_SW_2 ) {
-    giSmartLightScreenMode = SMARTLIGHT_MAINMODE;
+  if ( keys & HAL_KEY_SW_2 )
     bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_FORMATION | BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_FINDING_BINDING | BDB_COMMISSIONING_MODE_INITIATOR_TL);
-  }
   if ( keys & HAL_KEY_SW_3 ) {
-    giSmartLightScreenMode = SMARTLIGHT_MAINMODE;
-  
-    // touchlink target commissioning, if enabled  
+    // touchlink target commissioning, if enabled 
 #if ( defined ( BDB_TL_TARGET ) && (BDB_TOUCHLINK_CAPABILITY_ENABLED == TRUE) )
     bdb_StartCommissioning(BDB_COMMISSIONING_MODE_FINDING_BINDING);
     touchLinkTarget_EnableCommissioning( 30000 );
 #endif
-
-  }
-  if ( keys & HAL_KEY_SW_4 ) {
-   giSmartLightScreenMode = giSmartLightScreenMode ? SMARTLIGHT_MAINMODE : SMARTLIGHT_HELPMODE;
-#ifdef LCD_SUPPORTED
-    HalLcdWriteString( (char *)sClearLine, HAL_LCD_LINE_2 );
-#endif
   }
   if ( keys & HAL_KEY_SW_5 ) bdb_resetLocalAction();
-
-  zclSmartLight_LcdDisplayUpdate();
 }
-
-// Called to update the LCD display.
-void zclSmartLight_LcdDisplayUpdate( void ) {
-#ifdef LCD_SUPPORTED
-  if ( giSmartLightScreenMode == SMARTLIGHT_HELPMODE )
-    zclSmartLight_LcdDisplayHelpMode();
-  else zclSmartLight_LcdDisplayMainMode();
-#endif
-}
-
-#ifdef LCD_SUPPORTED
-// Called to display the main screen on the LCD.
-static void zclSmartLight_LcdDisplayMainMode( void ) {
-  // display line 1 to indicate NWK status
-  if ( zclSmartLight_NwkState == DEV_ZB_COORD ) {
-    zclHA_LcdStatusLine1( ZCL_HA_STATUSLINE_ZC );
-  }
-  else if ( zclSmartLight_NwkState == DEV_ROUTER ) {
-    zclHA_LcdStatusLine1( ZCL_HA_STATUSLINE_ZR );
-  }
-  else if ( zclSmartLight_NwkState == DEV_END_DEVICE ) {
-    zclHA_LcdStatusLine1( ZCL_HA_STATUSLINE_ZED );
-  }
-
-  // end of line 3 displays permit join status (*)
-  if ( gPermitDuration ) sSwHelp[15] = '*';
-  else sSwHelp[15] = ' ';
-  HalLcdWriteString( (char *)sSwHelp, HAL_LCD_LINE_3 );
-}
-
-// Called to display the SW options on the LCD.
-static void zclSmartLight_LcdDisplayHelpMode( void ) {
-  HalLcdWriteString( (char *)sSwSmartLight, HAL_LCD_LINE_1 );
-  HalLcdWriteString( (char *)sSwBDBMode, HAL_LCD_LINE_2 );
-  HalLcdWriteString( (char *)sSwHelp, HAL_LCD_LINE_3 );
-}
-#endif // LCD_SUPPORTED
 
 // Callback in which the status of the commissioning process are reported
 static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg) {

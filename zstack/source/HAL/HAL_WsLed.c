@@ -41,7 +41,7 @@ void WS2812_StoreColor(uint8 color) {
     }
 }
 
-void HalWsLedSetRGB(uint8 red, uint8 green, uint8 blue) {
+void Hal_WsLed_SetRGB(uint8 red, uint8 green, uint8 blue) {
     WS2812_bit = 0;
     WS2812_byte = 0;
 
@@ -59,7 +59,7 @@ void HalWsLedSetRGB(uint8 red, uint8 green, uint8 blue) {
     }
 }
 
-void HalWsLedInit(void) {
+void Hal_WsLed_Init(void) {
     P1SEL |= BV(5);  // 0=GPIO 1=Peripheral (SPI)
     P1DIR |= BV(5);  // 1=output
     P1INP = 0x00;    // 1=no pulling
@@ -69,5 +69,5 @@ void HalWsLedInit(void) {
     U0GCR = 0x10;    // UART0 Baud_E
     U0BAUD = 0x40;   // UART0 Baud_M
 
-    HalWsLedSetRGB(0, 0, 0);
+    Hal_WsLed_SetRGB(0, 0, 0);
 }
