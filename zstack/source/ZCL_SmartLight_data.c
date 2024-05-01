@@ -1,6 +1,3 @@
-/*********************************************************************
- * INCLUDES
- */
 #include "ZComDef.h"
 #include "OSAL.h"
 #include "AF.h"
@@ -25,27 +22,11 @@
 
 #include "ZCL_SmartLight.h"
 
-/*********************************************************************
- * CONSTANTS
- */
-
 #define SMARTLIGHT_DEVICE_VERSION     0
 #define SMARTLIGHT_FLAGS              0
 
 #define SMARTLIGHT_HWVERSION          1
 #define SMARTLIGHT_ZCLVERSION         1
-
-/*********************************************************************
- * TYPEDEFS
- */
-
-/*********************************************************************
- * MACROS
- */
-
-/*********************************************************************
- * GLOBAL VARIABLES
- */
 
 // Global attributes
 const uint16 zclSmartLight_clusterRevision_all = 0x0001; 
@@ -71,37 +52,32 @@ uint16 zclSmartLight_IdentifyTime;
  */
 
 #if ZCL_DISCOVER
-CONST zclCommandRec_t zclSmartLight_Cmds[] =
-{
+CONST zclCommandRec_t zclSmartLight_Cmds[] = {
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
     COMMAND_BASIC_RESET_FACT_DEFAULT,
     CMD_DIR_SERVER_RECEIVED
   },
-
 };
 
 CONST uint8 zclCmdsArraySize = ( sizeof(zclSmartLight_Cmds) / sizeof(zclSmartLight_Cmds[0]) );
 #endif // ZCL_DISCOVER
 
-/*********************************************************************
- * ATTRIBUTE DEFINITIONS - Uses REAL cluster IDs
- */
-CONST zclAttrRec_t zclSmartLight_Attrs[] =
-{
-  // *** General Basic Cluster Attributes ***
+// ATTRIBUTE DEFINITIONS - Uses REAL cluster IDs
+CONST zclAttrRec_t zclSmartLight_Attrs[] = {
+  // General Basic Cluster Attributes
   {
-    ZCL_CLUSTER_ID_GEN_BASIC,             // Cluster IDs - defined in the foundation (ie. zcl.h)
-    {  // Attribute record
-      ATTRID_BASIC_HW_VERSION,            // Attribute ID - Found in Cluster Library header (ie. zcl_general.h)
-      ZCL_DATATYPE_UINT8,                 // Data Type - found in zcl.h
-      ACCESS_CONTROL_READ,                // Variable access control - found in zcl.h
-      (void *)&zclSmartLight_HWRevision  // Pointer to attribute variable
+    ZCL_CLUSTER_ID_GEN_BASIC,           // Cluster IDs - defined in the foundation (ie. zcl.h)
+    {
+      ATTRID_BASIC_HW_VERSION,          // Attribute ID - Found in Cluster Library header (ie. zcl_general.h)
+      ZCL_DATATYPE_UINT8,               // Data Type - found in zcl.h
+      ACCESS_CONTROL_READ,              // Variable access control - found in zcl.h
+      (void *)&zclSmartLight_HWRevision // Pointer to attribute variable
     }
   },
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    { // Attribute record
+    {
       ATTRID_BASIC_ZCL_VERSION,
       ZCL_DATATYPE_UINT8,
       ACCESS_CONTROL_READ,
@@ -110,7 +86,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   },
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    { // Attribute record
+    {
       ATTRID_BASIC_MANUFACTURER_NAME,
       ZCL_DATATYPE_CHAR_STR,
       ACCESS_CONTROL_READ,
@@ -119,7 +95,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   },
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    { // Attribute record
+    {
       ATTRID_BASIC_MODEL_ID,
       ZCL_DATATYPE_CHAR_STR,
       ACCESS_CONTROL_READ,
@@ -128,7 +104,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   },
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    { // Attribute record
+    {
       ATTRID_BASIC_DATE_CODE,
       ZCL_DATATYPE_CHAR_STR,
       ACCESS_CONTROL_READ,
@@ -137,7 +113,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   },
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    { // Attribute record
+    {
       ATTRID_BASIC_POWER_SOURCE,
       ZCL_DATATYPE_ENUM8,
       ACCESS_CONTROL_READ,
@@ -146,7 +122,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   },
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    { // Attribute record
+    {
       ATTRID_BASIC_LOCATION_DESC,
       ZCL_DATATYPE_CHAR_STR,
       (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE),
@@ -155,7 +131,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   },
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    { // Attribute record
+    {
       ATTRID_BASIC_PHYSICAL_ENV,
       ZCL_DATATYPE_ENUM8,
       (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE),
@@ -164,7 +140,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   },
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    { // Attribute record
+    {
       ATTRID_BASIC_DEVICE_ENABLED,
       ZCL_DATATYPE_BOOLEAN,
       (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE),
@@ -176,7 +152,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   // *** Identify Cluster Attribute ***
   {
     ZCL_CLUSTER_ID_GEN_IDENTIFY,
-    { // Attribute record
+    {
       ATTRID_IDENTIFY_TIME,
       ZCL_DATATYPE_UINT16,
       (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE),
@@ -186,7 +162,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
 #endif
   {
     ZCL_CLUSTER_ID_GEN_BASIC,
-    {  // Attribute record
+    {
       ATTRID_CLUSTER_REVISION,
       ZCL_DATATYPE_UINT16,
       ACCESS_CONTROL_READ,
@@ -195,7 +171,7 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
   },
   {
     ZCL_CLUSTER_ID_GEN_IDENTIFY,
-    {  // Attribute record
+    {
       ATTRID_CLUSTER_REVISION,
       ZCL_DATATYPE_UINT16,
       ACCESS_CONTROL_READ,
@@ -206,39 +182,29 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] =
 
 uint8 CONST zclSmartLight_NumAttributes = ( sizeof(zclSmartLight_Attrs) / sizeof(zclSmartLight_Attrs[0]) );
 
-/*********************************************************************
- * SIMPLE DESCRIPTOR
- */
 // This is the Cluster ID List and should be filled with Application
 // specific cluster IDs.
-const cId_t zclSmartLight_InClusterList[] =
-{
+const cId_t zclSmartLight_InClusterList[] = {
   ZCL_CLUSTER_ID_GEN_BASIC,
   ZCL_CLUSTER_ID_GEN_IDENTIFY,
   
   // SMARTLIGHT_TODO: Add application specific Input Clusters Here. 
-  //       See zcl.h for Cluster ID definitions
-  
+  // See zcl.h for Cluster ID definitions
 };
 #define ZCLSMARTLIGHT_MAX_INCLUSTERS   (sizeof(zclSmartLight_InClusterList) / sizeof(zclSmartLight_InClusterList[0]))
 
-
-const cId_t zclSmartLight_OutClusterList[] =
-{
+const cId_t zclSmartLight_OutClusterList[] = {
   ZCL_CLUSTER_ID_GEN_BASIC,
-  
   // SMARTLIGHT_TODO: Add application specific Output Clusters Here. 
-  //       See zcl.h for Cluster ID definitions
+  // See zcl.h for Cluster ID definitions
 };
 #define ZCLSMARTLIGHT_MAX_OUTCLUSTERS  (sizeof(zclSmartLight_OutClusterList) / sizeof(zclSmartLight_OutClusterList[0]))
 
-
-SimpleDescriptionFormat_t zclSmartLight_SimpleDesc =
-{
+SimpleDescriptionFormat_t zclSmartLight_SimpleDesc = {
   SMARTLIGHT_ENDPOINT,                  //  int Endpoint;
-  ZCL_HA_PROFILE_ID,                     //  uint16 AppProfId;
+  ZCL_HA_PROFILE_ID,                    //  uint16 AppProfId;
   // SMARTLIGHT_TODO: Replace ZCL_HA_DEVICEID_ON_OFF_LIGHT with application specific device ID
-  ZCL_HA_DEVICEID_ON_OFF_LIGHT,          //  uint16 AppDeviceId; 
+  ZCL_HA_DEVICEID_ON_OFF_LIGHT,         //  uint16 AppDeviceId; 
   SMARTLIGHT_DEVICE_VERSION,            //  int   AppDevVer:4;
   SMARTLIGHT_FLAGS,                     //  int   AppFlags:4;
   ZCLSMARTLIGHT_MAX_INCLUSTERS,         //  byte  AppNumInClusters;
@@ -249,32 +215,19 @@ SimpleDescriptionFormat_t zclSmartLight_SimpleDesc =
 
 // Added to include ZLL Target functionality
 #if defined ( BDB_TL_INITIATOR ) || defined ( BDB_TL_TARGET )
-bdbTLDeviceInfo_t tlSmartLight_DeviceInfo =
-{
-  SMARTLIGHT_ENDPOINT,                  //uint8 endpoint;
-  ZCL_HA_PROFILE_ID,                        //uint16 profileID;
+bdbTLDeviceInfo_t tlSmartLight_DeviceInfo = {
+  SMARTLIGHT_ENDPOINT,          //uint8 endpoint;
+  ZCL_HA_PROFILE_ID,            //uint16 profileID;
   // SMARTLIGHT_TODO: Replace ZCL_HA_DEVICEID_ON_OFF_LIGHT with application specific device ID
-  ZCL_HA_DEVICEID_ON_OFF_LIGHT,          //uint16 deviceID;
-  SMARTLIGHT_DEVICE_VERSION,                    //uint8 version;
-  SMARTLIGHT_NUM_GRPS                   //uint8 grpIdCnt;
+  ZCL_HA_DEVICEID_ON_OFF_LIGHT, //uint16 deviceID;
+  SMARTLIGHT_DEVICE_VERSION,    //uint8 version;
+  SMARTLIGHT_NUM_GRPS           //uint8 grpIdCnt;
 };
 #endif
 
-/*********************************************************************
- * GLOBAL FUNCTIONS
- */
-
-/*********************************************************************
- * LOCAL FUNCTIONS
- */
-  
-void zclSmartLight_ResetAttributesToDefaultValues(void)
-{
-  int i;
-  
+void zclSmartLight_ResetAttributesToDefaultValues(void) {
   zclSmartLight_LocationDescription[0] = 16;
-  for (i = 1; i <= 16; i++)
-  {
+  for (int i = 1; i <= 16; i++) {
     zclSmartLight_LocationDescription[i] = ' ';
   }
   
@@ -284,11 +237,6 @@ void zclSmartLight_ResetAttributesToDefaultValues(void)
 #ifdef ZCL_IDENTIFY
   zclSmartLight_IdentifyTime = 0;
 #endif
-  
+
   /* SMARTLIGHT_TODO: initialize cluster attribute variables. */
 }
-
-/****************************************************************************
-****************************************************************************/
-
-

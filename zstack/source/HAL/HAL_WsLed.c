@@ -60,14 +60,14 @@ void HalWsLedSetRGB(uint8 red, uint8 green, uint8 blue) {
 }
 
 void HalWsLedInit(void) {
-    P1SEL |= BV(5); // 0=GPIO 1=Peripheral (SPI)
-    P1DIR |= BV(5); // 1=output
-    P1INP = 0x00; // 1=no pulling
+    P1SEL |= BV(5);  // 0=GPIO 1=Peripheral (SPI)
+    P1DIR |= BV(5);  // 1=output
+    P1INP = 0x00;    // 1=no pulling
 
     PERCFG |= BV(0); // UART0 SPI Alternative #2 Pins
-    U0CSR = 0x00; // UART0 SPI Master
-    U0GCR = 0x10; // UART0 Baud_E
-    U0BAUD = 0x40; // UART0 Baud_M
+    U0CSR = 0x00;    // UART0 SPI Master
+    U0GCR = 0x10;    // UART0 Baud_E
+    U0BAUD = 0x40;   // UART0 Baud_M
 
     HalWsLedSetRGB(0, 0, 0);
 }
