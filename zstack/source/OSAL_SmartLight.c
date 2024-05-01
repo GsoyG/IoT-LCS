@@ -1,7 +1,3 @@
-/*********************************************************************
- * INCLUDES
- */
-
 #include "ZComDef.h"
 #include "hal_drivers.h"
 #include "OSAL.h"
@@ -16,11 +12,10 @@
 #include "APS.h"
 #include "ZDApp.h"
 
-
 #include "bdb_interface.h"
 #if !defined (DISABLE_GREENPOWER_BASIC_PROXY) && (ZG_BUILD_RTR_TYPE)
   #include "gp_common.h"
-#endif  
+#endif
 
 #if defined ( ZIGBEE_FREQ_AGILITY ) || defined ( ZIGBEE_PANID_CONFLICT )
   #include "ZDNwkMgr.h"
@@ -40,10 +35,6 @@
 #endif // INTER_PAN
 
 #include "ZCL_SmartLight.h"
-
-/*********************************************************************
- * GLOBAL VARIABLES
- */
 
 // The order in this table must be identical to the task initialization calls below in osalInitTask.
 const pTaskEventHandlerFn tasksArr[] = {
@@ -84,21 +75,8 @@ const pTaskEventHandlerFn tasksArr[] = {
 const uint8 tasksCnt = sizeof( tasksArr ) / sizeof( tasksArr[0] );
 uint16 *tasksEvents;
 
-/*********************************************************************
- * FUNCTIONS
- *********************************************************************/
-
-/*********************************************************************
- * @fn      osalInitTasks
- *
- * @brief   This function invokes the initialization function for each task.
- *
- * @param   void
- *
- * @return  none
- */
-void osalInitTasks( void )
-{
+// This function invokes the initialization function for each task.
+void osalInitTasks( void ) {
   uint8 taskID = 0;
 
   tasksEvents = (uint16 *)osal_mem_alloc( sizeof( uint16 ) * tasksCnt);
@@ -137,6 +115,3 @@ void osalInitTasks( void )
   bdb_Init( taskID++ );
   zclSmartLight_Init( taskID );
 }
-
-/*********************************************************************
-*********************************************************************/
