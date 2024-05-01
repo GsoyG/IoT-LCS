@@ -18,10 +18,6 @@
 #define SMARTLIGHT_LEVEL_CTRL_EVT        0x0002
 #define SMARTLIGHT_END_DEVICE_REJOIN_EVT 0x0004
 
-#define SMARTLIGHT_EVT_1                 0x0008
-// #define SMARTLIGHT_EVT_2              0x0010
-// #define SMARTLIGHT_EVT_3              0x0020
-
 // Application Display Modes
 #define SMARTLIGHT_MAINMODE 0x00
 #define SMARTLIGHT_HELPMODE 0x01
@@ -52,7 +48,7 @@ extern uint8  zclSmartLight_IdentifyCommissionState;
 extern void zclSmartLight_Init( byte task_id );
 
 //Event Process for the task
-extern UINT16 zclSmartLight_event_loop( byte task_id, UINT16 events );
+extern uint16 zclSmartLight_event_loop( byte task_id, uint16 events );
 
 // Reset all writable attributes to their default values
 extern void zclSmartLight_ResetAttributesToDefaultValues(void);

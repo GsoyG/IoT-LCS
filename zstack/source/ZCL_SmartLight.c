@@ -32,8 +32,6 @@
 
 #include "onboard.h"
 
-#include "hal_led.h"
-#include "hal_key.h"
 #include "HAL/HAL_WsLed.h"
 
 // GLOBAL VARIABLES
@@ -45,7 +43,6 @@ uint8 gPermitDuration = 0; // permit joining default to disabled
 devStates_t zclSmartLight_NwkState = DEV_INIT;
 
 // LOCAL FUNCTIONS
-static void zclSmartLight_HandleKeys( byte shift, byte keys );
 static void zclSmartLight_BasicResetCB( void );
 static void zclSmartLight_ProcessIdentifyTimeChange( uint8 endpoint );
 static void zclSmartLight_BindNotification( bdbBindNotificationData_t *data );
@@ -151,9 +148,6 @@ void zclSmartLight_Init( byte task_id ) {
   // Register low voltage NV memory protection application callback
   RegisterVoltageWarningCB( zclSampleApp_BatteryWarningCB );
 
-  // Register for all key events - This app will handle all key events
-  RegisterForKeys( zclSmartLight_TaskID );
-
   bdb_RegisterCommissioningStatusCB( zclSmartLight_ProcessCommissioningStatus );
   bdb_RegisterIdentifyTimeChangeCB( zclSmartLight_ProcessIdentifyTimeChange );
   bdb_RegisterBindNotificationCB( zclSmartLight_BindNotification );
@@ -180,7 +174,7 @@ void zclSmartLight_Init( byte task_id ) {
 }
 
 // Event Loop Processor for zclGeneral.
-uint16 zclSmartLight_event_loop( uint8 task_id, uint16 events ) {
+uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
   afIncomingMSGPacket_t *MSGpkt;
 
   (void)task_id; // Intentionally unreferenced parameter
@@ -191,9 +185,6 @@ uint16 zclSmartLight_event_loop( uint8 task_id, uint16 events ) {
         case ZCL_INCOMING_MSG:
           // Incoming ZCL Foundation command/response messages
           zclSmartLight_ProcessIncomingMsg( (zclIncomingMsg_t *)MSGpkt );
-          break;
-        case KEY_CHANGE:
-          zclSmartLight_HandleKeys( ((keyChange_t *)MSGpkt)->state, ((keyChange_t *)MSGpkt)->keys );
           break;
         case ZDO_STATE_CHANGE:
           zclSmartLight_NwkState = (devStates_t)(MSGpkt->hdr.status);
@@ -215,59 +206,8 @@ uint16 zclSmartLight_event_loop( uint8 task_id, uint16 events ) {
 
   /* SMARTLIGHT_TODO: handle app events here */
 
-  if ( events & SMARTLIGHT_EVT_1 ) {
-    // toggle LED 2 state, start another timer for 500ms
-    HalLedSet ( HAL_LED_2, HAL_LED_MODE_TOGGLE );
-    osal_start_timerEx( zclSmartLight_TaskID, SMARTLIGHT_EVT_1, 500 );
-
-    return ( events ^ SMARTLIGHT_EVT_1 );
-  }
-
-  /* if ( events & SMARTLIGHT_EVT_2 ) {
-    return ( events ^ SMARTLIGHT_EVT_2 );
-  }
-  
-  if ( events & SMARTLIGHT_EVT_3 ) {
-    return ( events ^ SMARTLIGHT_EVT_3 );
-  } */
-
   // Discard unknown events
   return 0;
-}
-
-// Handles all key events for this device.
-static void zclSmartLight_HandleKeys( byte shift, byte keys ) {
-  if ( keys & HAL_KEY_SW_1 ) {
-    static bool LED_OnOff = FALSE;
-    
-    /* SMARTLIGHT_TODO: add app functionality to hardware keys here */
-    
-    // for example, start/stop LED 2 toggling with 500ms period
-    if (LED_OnOff) {
-      // if the LED is blinking, stop the osal timer and turn the LED off
-      osal_stop_timerEx(zclSmartLight_TaskID, SMARTLIGHT_EVT_1);
-      HalLedSet ( HAL_LED_2, HAL_LED_MODE_OFF );
-      LED_OnOff = FALSE;
-    }
-    else {
-      // turn on LED 2 and start an osal timer to toggle it after 500ms, search
-      // for SMARTLIGHT_EVT_1 to see event handling after expired timer
-      osal_start_timerEx( zclSmartLight_TaskID, SMARTLIGHT_EVT_1, 500 );
-      HalLedSet ( HAL_LED_2, HAL_LED_MODE_ON );
-      LED_OnOff = TRUE;
-    }
-  }
-  // Start the BDB commissioning method
-  if ( keys & HAL_KEY_SW_2 )
-    bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_FORMATION | BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_FINDING_BINDING | BDB_COMMISSIONING_MODE_INITIATOR_TL);
-  if ( keys & HAL_KEY_SW_3 ) {
-    // touchlink target commissioning, if enabled 
-#if ( defined ( BDB_TL_TARGET ) && (BDB_TOUCHLINK_CAPABILITY_ENABLED == TRUE) )
-    bdb_StartCommissioning(BDB_COMMISSIONING_MODE_FINDING_BINDING);
-    touchLinkTarget_EnableCommissioning( 30000 );
-#endif
-  }
-  if ( keys & HAL_KEY_SW_5 ) bdb_resetLocalAction();
 }
 
 // Callback in which the status of the commissioning process are reported
@@ -328,9 +268,7 @@ static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *
 // Called to process any change to the IdentifyTime attribute.
 static void zclSmartLight_ProcessIdentifyTimeChange( uint8 endpoint ) {
   (void) endpoint;
-  if ( zclSmartLight_IdentifyTime > 0 )
-    HalLedBlink ( HAL_LED_2, 0xFF, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME );
-  else HalLedSet ( HAL_LED_2, HAL_LED_MODE_OFF );
+  if ( zclSmartLight_IdentifyTime > 0 ) {}
 }
 
 // Called when a new bind is added.
