@@ -34,9 +34,9 @@ const uint16 zclSmartLight_clusterRevision_all = 0x0001;
 // Basic Cluster
 const uint8 zclSmartLight_HWRevision = SMARTLIGHT_HWVERSION;
 const uint8 zclSmartLight_ZCLVersion = SMARTLIGHT_ZCLVERSION;
-const uint8 zclSmartLight_ManufacturerName[] = { 16, 'T','e','x','a','s','I','n','s','t','r','u','m','e','n','t','s' };
-const uint8 zclSmartLight_ModelId[] = { 16, 'T','I','0','0','0','1',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' };
-const uint8 zclSmartLight_DateCode[] = { 16, '2','0','0','6','0','8','3','1',' ',' ',' ',' ',' ',' ',' ',' ' };
+const uint8 zclSmartLight_ManufacturerName[] = { 4, 'G','s','o','y' };
+const uint8 zclSmartLight_ModelId[] = { 6, 'S','L','0','0','0','1' };
+const uint8 zclSmartLight_DateCode[] = { 16, '2','0','2','4','0','4','0','1',' ',' ',' ',' ',' ',' ',' ',' ' };
 const uint8 zclSmartLight_PowerSource = POWER_SOURCE_MAINS_1_PHASE;
 
 uint8 zclSmartLight_LocationDescription[17] = { 16, ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' };
