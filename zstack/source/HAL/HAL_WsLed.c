@@ -69,18 +69,20 @@ void WS2812_SendLED(uint8 red, uint8 green, uint8 blue) {
     }
 
     for (uint16 j = 0; j < WS2812_buffersize; j++) {
-        U1DBUF = WS2812_buffer[j];
-        while ((U1CSR & (1 << 0))); // wait until byte is sent
+        U0DBUF = WS2812_buffer[j];
+        while ((U0CSR & (1 << 0))); // wait until byte is sent
     }
 }
 
 void HalWsLedInit(void) {
-    P1SEL |= BV(5); // 0=GPIO 1=Peripheral (SPI)
-    P1DIR |= BV(5); // 1=output
+    P1SEL = 0x20; // 0=GPIO 1=Peripheral (SPI)
+    P1DIR = 0x26; // 1=output
+    P1INP = 0x00;
 
-    U1CSR = 0x00; // UART1 SPI Master
-    U1GCR = 0x10; // UART1 Baud_E
-    U1BAUD = 0x40; // UART1 Baud_M
+    PERCFG |= BV(0); // UART0 SPI Alternative #2 Pins
+    U0CSR = 0x00; // UART0 SPI Master
+    U0GCR = 0x10; // UART0 Baud_E
+    U0BAUD = 0x40; // UART0 Baud_M
 
-    WS2812_SendLED(0, 0, 0);
+    WS2812_SendLED(255, 0, 255);
 }

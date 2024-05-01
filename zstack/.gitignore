@@ -5,3 +5,7 @@
 /CoordinatorEB
 /RouterEB
 /EndDeviceEB
+
+# 工程文件
+*.ewt
+*.dep
