@@ -45,6 +45,7 @@ devStates_t zclSmartLight_NwkState = DEV_INIT;
 // LOCAL FUNCTIONS
 static void zclSmartLight_BasicResetCB( void );
 static void zclSmartLight_ProcessIdentifyTimeChange( uint8 endpoint );
+static void zclSmartLight_OnOffCB(uint8 cmd);
 static void zclSmartLight_BindNotification( bdbBindNotificationData_t *data );
 #if ( defined ( BDB_TL_TARGET ) && (BDB_TOUCHLINK_CAPABILITY_ENABLED == TRUE) )
 static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable );
@@ -73,7 +74,7 @@ static void zclSampleApp_BatteryWarningCB( uint8 voltLevel);
 static zclGeneral_AppCallbacks_t zclSmartLight_CmdCallbacks = {
   zclSmartLight_BasicResetCB, // Basic Cluster Reset command
   NULL,                       // Identify Trigger Effect command
-  NULL,                       // On/Off cluster commands
+  zclSmartLight_OnOffCB,      // On/Off cluster commands
   NULL,                       // On/Off cluster enhanced command Off with Effect
   NULL,                       // On/Off cluster enhanced command On with Recall Global Scene
   NULL,                       // On/Off cluster enhanced command On with Timed Off
@@ -166,11 +167,11 @@ void zclSmartLight_Init( byte task_id ) {
   }
 #endif
 
+  Hal_WsLed_Init();
+
   // Start BDB Commissioning
   uint8 bdbComissioningModes = (BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_NWK_FORMATION | BDB_COMMISSIONING_MODE_FINDING_BINDING);
   bdb_StartCommissioning(bdbComissioningModes);
-
-  Hal_WsLed_Init();
 }
 
 // Event Loop Processor for zclGeneral.
@@ -289,6 +290,27 @@ static void zclSmartLight_BasicResetCB( void ) {
   /* SMARTLIGHT_TODO: remember to update this function with any
      application-specific cluster attribute variables */
   zclSmartLight_ResetAttributesToDefaultValues();
+}
+
+// Callback from the ZCL General Cluster Library when it received an On / Off Command for this application.
+static void zclSmartLight_OnOffCB(uint8 cmd) {
+  uint8 state;
+  switch (cmd) {
+  case COMMAND_ON:
+    state = LIGHT_ON;
+    break;
+  case COMMAND_OFF:
+    state = LIGHT_OFF;
+    break;
+  case COMMAND_TOGGLE:
+    state = zclSmartLight_OnOff == LIGHT_ON ? LIGHT_OFF : LIGHT_ON;
+  default:
+    state = LIGHT_OFF;
+    break;
+  }
+  zclSmartLight_OnOff = state;
+  if (state == LIGHT_ON) Hal_WsLed_SetRGB(255, 255, 255);
+  else Hal_WsLed_SetRGB(0, 0, 0);
 }
 
 // Called to handle battery-low situation.

@@ -1507,6 +1507,7 @@
                     <state>ZCL_IDENTIFY</state>
                     <state>ZCL_SCENES</state>
                     <state>ZCL_GROUPS</state>
+                    <state>ZCL_ON_OFF</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>

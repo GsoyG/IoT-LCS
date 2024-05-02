@@ -13,14 +13,13 @@
 #define SMARTLIGHT_NUM_GRPS 2
 #define SMARTLIGHT_ENDPOINT 8
 
+#define LIGHT_OFF 0x00
+#define LIGHT_ON 0x01
+
 // Application Events
 #define SMARTLIGHT_MAIN_SCREEN_EVT       0x0001
 #define SMARTLIGHT_LEVEL_CTRL_EVT        0x0002
 #define SMARTLIGHT_END_DEVICE_REJOIN_EVT 0x0004
-
-// Application Display Modes
-#define SMARTLIGHT_MAINMODE 0x00
-#define SMARTLIGHT_HELPMODE 0x01
 
 #define SMARTLIGHT_END_DEVICE_REJOIN_DELAY 10000
 
@@ -42,6 +41,9 @@ extern CONST uint8 zclSmartLight_NumAttributes;
 // Identify attributes
 extern uint16 zclSmartLight_IdentifyTime;
 extern uint8  zclSmartLight_IdentifyCommissionState;
+
+// OnOff attributes
+extern uint8  zclSmartLight_OnOff;
 
 // SMARTLIGHT_TODO: Declare application specific attributes here
 // Initialization for the task
