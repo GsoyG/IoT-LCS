@@ -9,6 +9,7 @@
 #include "zcl_lighting.h"
 
 #include "ZCL_SmartLight.h"
+#include "ZCL/ZCL_SmartLight_General.h"
 
 #define SMARTLIGHT_DEVICE_VERSION     0
 #define SMARTLIGHT_FLAGS              0
@@ -35,7 +36,7 @@ uint8 zclSmartLight_DeviceEnable = DEVICE_ENABLED;
 uint16 zclSmartLight_IdentifyTime;
 
 // On/Off Cluster
-uint8  zclSmartLight_OnOff;
+uint8 zclSmartLight_OnOff;
 
 /* SMARTLIGHT_TODO: declare attribute variables here. If its value can change,
  * initialize it in zclSmartLight_ResetAttributesToDefaultValues. If its

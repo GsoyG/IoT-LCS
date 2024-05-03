@@ -8,10 +8,10 @@
 #include "nwk_util.h"
 
 #include "zcl.h"
-#include "zcl_general.h"
 #include "zcl_ha.h"
 #include "zcl_diagnostic.h"
 #include "ZCL_SmartLight.h"
+#include "ZCL/ZCL_SmartLight_General.h"
 
 #include "bdb.h"
 #include "bdb_interface.h"
@@ -35,17 +35,16 @@
 #include "HAL/HAL_WsLed.h"
 
 // GLOBAL VARIABLES
-byte zclSmartLight_TaskID;
 
-// LOCAL VARIABLES
-uint8 gPermitDuration = 0; // permit joining default to disabled
+byte zclSmartLight_TaskID;
 
 devStates_t zclSmartLight_NwkState = DEV_INIT;
 
 // LOCAL FUNCTIONS
-static void zclSmartLight_BasicResetCB( void );
+
+static void zclSampleApp_BatteryWarningCB(uint8 voltLevel);
+
 static void zclSmartLight_ProcessIdentifyTimeChange( uint8 endpoint );
-static void zclSmartLight_OnOffCB(uint8 cmd);
 static void zclSmartLight_BindNotification( bdbBindNotificationData_t *data );
 #if ( defined ( BDB_TL_TARGET ) && (BDB_TOUCHLINK_CAPABILITY_ENABLED == TRUE) )
 static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable );
@@ -55,53 +54,18 @@ static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *
 
 // Functions to process ZCL Foundation incoming Command/Response messages
 static void zclSmartLight_ProcessIncomingMsg( zclIncomingMsg_t *msg );
+static uint8 zclSmartLight_ProcessInDefaultRspCmd(zclIncomingMsg_t* pInMsg);
 #ifdef ZCL_READ
 static uint8 zclSmartLight_ProcessInReadRspCmd( zclIncomingMsg_t *pInMsg );
 #endif
 #ifdef ZCL_WRITE
 static uint8 zclSmartLight_ProcessInWriteRspCmd( zclIncomingMsg_t *pInMsg );
 #endif
-static uint8 zclSmartLight_ProcessInDefaultRspCmd( zclIncomingMsg_t *pInMsg );
 #ifdef ZCL_DISCOVER
 static uint8 zclSmartLight_ProcessInDiscCmdsRspCmd( zclIncomingMsg_t *pInMsg );
 static uint8 zclSmartLight_ProcessInDiscAttrsRspCmd( zclIncomingMsg_t *pInMsg );
 static uint8 zclSmartLight_ProcessInDiscAttrsExtRspCmd( zclIncomingMsg_t *pInMsg );
 #endif
-
-static void zclSampleApp_BatteryWarningCB( uint8 voltLevel);
-
-// ZCL General Profile Callback table
-static zclGeneral_AppCallbacks_t zclSmartLight_CmdCallbacks = {
-  zclSmartLight_BasicResetCB, // Basic Cluster Reset command
-  NULL,                       // Identify Trigger Effect command
-  zclSmartLight_OnOffCB,      // On/Off cluster commands
-  NULL,                       // On/Off cluster enhanced command Off with Effect
-  NULL,                       // On/Off cluster enhanced command On with Recall Global Scene
-  NULL,                       // On/Off cluster enhanced command On with Timed Off
-#ifdef ZCL_LEVEL_CTRL
-  NULL,                       // Level Control Move to Level command
-  NULL,                       // Level Control Move command
-  NULL,                       // Level Control Step command
-  NULL,                       // Level Control Stop command
-#endif
-#ifdef ZCL_GROUPS
-  NULL,                       // Group Response commands
-#endif
-#ifdef ZCL_SCENES
-  NULL,                       // Scene Store Request command
-  NULL,                       // Scene Recall Request command
-  NULL,                       // Scene Response command
-#endif
-#ifdef ZCL_ALARMS
-  NULL,                       // Alarm (Response) commands
-#endif
-#ifdef SE_UK_EXT
-  NULL,                       // Get Event Log command
-  NULL,                       // Publish Event Log command
-#endif
-  NULL,                       // RSSI Location command
-  NULL                        // RSSI Location Response command
-};
 
 /*********************************************************************
  * SMARTLIGHT_TODO: Add other callback structures for any additional application specific 
@@ -211,58 +175,13 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
   return 0;
 }
 
-// Callback in which the status of the commissioning process are reported
-static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg) {
-  switch(bdbCommissioningModeMsg->bdbCommissioningMode) {
-    case BDB_COMMISSIONING_FORMATION:
-      if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS) {
-        //After formation, perform nwk steering again plus the remaining commissioning modes that has not been process yet
-        bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING | bdbCommissioningModeMsg->bdbRemainingCommissioningModes);
-      }
-      else {
-        //Want to try other channels?
-        //try with bdb_setChannelAttribute
-      }
-    break;
-    case BDB_COMMISSIONING_NWK_STEERING:
-      if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS) {
-        //YOUR JOB:
-        //We are on the nwk, what now?
-      }
-      else {
-        //See the possible errors for nwk steering procedure
-        //No suitable networks found
-        //Want to try other channels?
-        //try with bdb_setChannelAttribute
-      }
-    break;
-    case BDB_COMMISSIONING_FINDING_BINDING:
-      if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS) {
-        //YOUR JOB:
-      }
-      else {
-        //YOUR JOB:
-        //retry?, wait for user interaction?
-      }
-    break;
-    case BDB_COMMISSIONING_INITIALIZATION:
-      //Initialization notification can only be successful. Failure on initialization
-      //only happens for ZED and is notified as BDB_COMMISSIONING_PARENT_LOST notification
-
-      //YOUR JOB:
-      //We are on a network, what now?
-    break;
-#if ZG_BUILD_ENDDEVICE_TYPE    
-    case BDB_COMMISSIONING_PARENT_LOST:
-      if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_NETWORK_RESTORED) {
-        //We did recover from losing parent
-      }
-      else {
-        //Parent not found, attempt to rejoin again after a fixed delay
-        osal_start_timerEx(zclSmartLight_TaskID, SMARTLIGHT_END_DEVICE_REJOIN_EVT, SMARTLIGHT_END_DEVICE_REJOIN_DELAY);
-      }
-    break;
-#endif
+// Called to handle battery-low situation.
+void zclSampleApp_BatteryWarningCB(uint8 voltLevel) {
+  if (voltLevel == VOLT_LEVEL_CAUTIOUS) {
+    // Send warning message to the gateway and blink LED
+  }
+  else if (voltLevel == VOLT_LEVEL_BAD) {
+    // Shut down the system
   }
 }
 
@@ -285,42 +204,59 @@ static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable ) {
 }
 #endif
 
-// Callback from the ZCL General Cluster Library to set all the Basic Cluster attributes to default values.
-static void zclSmartLight_BasicResetCB( void ) {
-  /* SMARTLIGHT_TODO: remember to update this function with any
-     application-specific cluster attribute variables */
-  zclSmartLight_ResetAttributesToDefaultValues();
-}
+// Callback in which the status of the commissioning process are reported
+static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t* bdbCommissioningModeMsg) {
+  switch (bdbCommissioningModeMsg->bdbCommissioningMode) {
+  case BDB_COMMISSIONING_FORMATION:
+    if (bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS) {
+      //After formation, perform nwk steering again plus the remaining commissioning modes that has not been process yet
+      bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING | bdbCommissioningModeMsg->bdbRemainingCommissioningModes);
+  }
+    else {
+      //Want to try other channels?
+      //try with bdb_setChannelAttribute
+    }
+    break;
+  case BDB_COMMISSIONING_NWK_STEERING:
+    if (bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS) {
+      //YOUR JOB:
+      //We are on the nwk, what now?
+    }
+    else {
+      //See the possible errors for nwk steering procedure
+      //No suitable networks found
+      //Want to try other channels?
+      //try with bdb_setChannelAttribute
+    }
+    break;
+  case BDB_COMMISSIONING_FINDING_BINDING:
+    if (bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS) {
+      //YOUR JOB:
+    }
+    else {
+      //YOUR JOB:
+      //retry?, wait for user interaction?
+    }
+    break;
+  case BDB_COMMISSIONING_INITIALIZATION:
+    //Initialization notification can only be successful. Failure on initialization
+    //only happens for ZED and is notified as BDB_COMMISSIONING_PARENT_LOST notification
 
-// Callback from the ZCL General Cluster Library when it received an On / Off Command for this application.
-static void zclSmartLight_OnOffCB(uint8 cmd) {
-  uint8 state;
-  switch (cmd) {
-  case COMMAND_ON:
-    state = LIGHT_ON;
+    //YOUR JOB:
+    //We are on a network, what now?
     break;
-  case COMMAND_OFF:
-    state = LIGHT_OFF;
+#if ZG_BUILD_ENDDEVICE_TYPE
+  case BDB_COMMISSIONING_PARENT_LOST:
+    if (bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_NETWORK_RESTORED) {
+      //We did recover from losing parent
+    }
+    else {
+      //Parent not found, attempt to rejoin again after a fixed delay
+      osal_start_timerEx(zclSmartLight_TaskID, SMARTLIGHT_END_DEVICE_REJOIN_EVT, SMARTLIGHT_END_DEVICE_REJOIN_DELAY);
+    }
     break;
-  case COMMAND_TOGGLE:
-    state = zclSmartLight_OnOff == LIGHT_ON ? LIGHT_OFF : LIGHT_ON;
-  default:
-    state = LIGHT_OFF;
-    break;
-  }
-  zclSmartLight_OnOff = state;
-  if (state == LIGHT_ON) Hal_WsLed_SetRGB(255, 255, 255);
-  else Hal_WsLed_SetRGB(0, 0, 0);
-}
-
-// Called to handle battery-low situation.
-void zclSampleApp_BatteryWarningCB( uint8 voltLevel ) {
-  if ( voltLevel == VOLT_LEVEL_CAUTIOUS ) {
-    // Send warning message to the gateway and blink LED
-  }
-  else if ( voltLevel == VOLT_LEVEL_BAD ) {
-    // Shut down the system
-  }
+#endif
+    }
 }
 
 // Functions for processing ZCL Foundation incoming Command/Response messages
@@ -368,6 +304,15 @@ static void zclSmartLight_ProcessIncomingMsg( zclIncomingMsg_t *pInMsg ) {
   if ( pInMsg->attrCmd ) osal_mem_free( pInMsg->attrCmd );
 }
 
+// Process the "Profile" Default Response Command
+static uint8 zclSmartLight_ProcessInDefaultRspCmd(zclIncomingMsg_t* pInMsg) {
+  // zclDefaultRspCmd_t *defaultRspCmd = (zclDefaultRspCmd_t *)pInMsg->attrCmd;
+
+  // Device is notified of the Default Response command.
+  (void)pInMsg;
+  return (TRUE);
+}
+
 #ifdef ZCL_READ
 // Process the "Profile" Read Response Command
 static uint8 zclSmartLight_ProcessInReadRspCmd( zclIncomingMsg_t *pInMsg ) {
@@ -392,15 +337,6 @@ static uint8 zclSmartLight_ProcessInWriteRspCmd( zclIncomingMsg_t *pInMsg ) {
   return ( TRUE );
 }
 #endif // ZCL_WRITE
-
-// Process the "Profile" Default Response Command
-static uint8 zclSmartLight_ProcessInDefaultRspCmd( zclIncomingMsg_t *pInMsg ) {
-  // zclDefaultRspCmd_t *defaultRspCmd = (zclDefaultRspCmd_t *)pInMsg->attrCmd;
-
-  // Device is notified of the Default Response command.
-  (void)pInMsg;
-  return ( TRUE );
-}
 
 #ifdef ZCL_DISCOVER
 // Process the Discover Commands Response Command

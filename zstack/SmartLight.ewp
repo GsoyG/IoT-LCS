@@ -3532,6 +3532,15 @@
                 <name>$PROJ_DIR$\source\HAL\HAL_WsLed.h</name>
             </file>
         </group>
+        <group>
+            <name>ZCL</name>
+            <file>
+                <name>$PROJ_DIR$\source\ZCL\ZCL_SmartLight_General.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\source\ZCL\ZCL_SmartLight_General.h</name>
+            </file>
+        </group>
         <file>
             <name>$PROJ_DIR$\source\OSAL_SmartLight.c</name>
         </file>
