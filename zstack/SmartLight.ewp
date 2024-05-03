@@ -1501,6 +1501,7 @@
                     <state>LEGACY_LCD_DEBUG</state>
                     <state>LCD_SUPPORTED=DEBUG</state>
                     <state>MULTICAST_ENABLED=FALSE</state>
+                    <state>BDB_REPORTING</state>
                     <state>ZCL_READ</state>
                     <state>ZCL_WRITE</state>
                     <state>ZCL_BASIC</state>

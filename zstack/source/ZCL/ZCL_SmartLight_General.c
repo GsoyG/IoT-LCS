@@ -2,6 +2,9 @@
 #include "HAL/HAL_WsLed.h"
 #include "ZCL/ZCL_SmartLight_General.h"
 
+void zclSmartLight_BasicResetCB(void);
+void zclSmartLight_OnOffCB(uint8 cmd);
+
 // ZCL General Profile Callback table
 zclGeneral_AppCallbacks_t zclSmartLight_CmdCallbacks = {
   zclSmartLight_BasicResetCB, // Basic Cluster Reset command
