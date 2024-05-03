@@ -133,9 +133,13 @@ void zclSmartLight_Init( byte task_id ) {
 
   Hal_WsLed_Init();
 
+  // If it is not on a network, blink the LED
+  if (!bdbAttributes.bdbNodeIsOnANetwork) {
+    osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_LED_BLINK_EVT, 1000);
+  }
+
   // Start BDB Commissioning
-  uint8 bdbComissioningModes = (BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_NWK_FORMATION | BDB_COMMISSIONING_MODE_FINDING_BINDING);
-  bdb_StartCommissioning(bdbComissioningModes);
+  bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
 }
 
 // Event Loop Processor for zclGeneral.
@@ -153,6 +157,11 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
           break;
         case ZDO_STATE_CHANGE:
           zclSmartLight_NwkState = (devStates_t)(MSGpkt->hdr.status);
+          // If the device is leaving the network, start commission process
+          if (zclSmartLight_NwkState == DEV_NWK_ORPHAN) {
+            osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_LED_BLINK_EVT, 1000);
+            bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
+          }
           break;
         default:
           break;
@@ -169,7 +178,17 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
   }
 #endif
 
-  /* SMARTLIGHT_TODO: handle app events here */
+  if (events & SMARTLIGHT_LED_BLINK_EVT) {
+    if (zclSmartLight_OnOff == LIGHT_ON) {
+      Hal_WsLed_SetRGB(0, 0, 0);
+      zclSmartLight_OnOff = LIGHT_OFF;
+    }
+    else {
+      Hal_WsLed_SetRGB(255, 255, 255);
+      zclSmartLight_OnOff = LIGHT_ON;
+    }
+    return (events ^ SMARTLIGHT_LED_BLINK_EVT);
+  }
 
   // Discard unknown events
   return 0;
@@ -211,7 +230,7 @@ static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t* 
     if (bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS) {
       //After formation, perform nwk steering again plus the remaining commissioning modes that has not been process yet
       bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING | bdbCommissioningModeMsg->bdbRemainingCommissioningModes);
-  }
+    }
     else {
       //Want to try other channels?
       //try with bdb_setChannelAttribute
@@ -219,14 +238,12 @@ static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t* 
     break;
   case BDB_COMMISSIONING_NWK_STEERING:
     if (bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS) {
-      //YOUR JOB:
-      //We are on the nwk, what now?
+      // End of LED blinking
+      osal_stop_timerEx(zclSmartLight_TaskID, SMARTLIGHT_LED_BLINK_EVT);
     }
     else {
-      //See the possible errors for nwk steering procedure
-      //No suitable networks found
-      //Want to try other channels?
-      //try with bdb_setChannelAttribute
+      // Try again
+      bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
     }
     break;
   case BDB_COMMISSIONING_FINDING_BINDING:
