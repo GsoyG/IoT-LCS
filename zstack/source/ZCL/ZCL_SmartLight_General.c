@@ -62,6 +62,6 @@ void zclSmartLight_OnOffCB(uint8 cmd) {
         break;
     }
     zclSmartLight_OnOff = state;
-    if (state == LIGHT_ON) Hal_WsLed_SetRGB(255, 255, 255);
-    else Hal_WsLed_SetRGB(0, 0, 0);
+    if (state == LIGHT_ON) hal_wsled_setRgb(255, 255, 255);
+    else hal_wsled_setRgb(0, 0, 0);
 }

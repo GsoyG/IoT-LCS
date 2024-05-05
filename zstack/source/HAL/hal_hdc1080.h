@@ -3,10 +3,10 @@
 
 #include "ZComDef.h"
 
-#define HDC_1080_ADD                0x40
-#define Configuration_register_add  0x02
-#define Temperature_register_add    0x00
-#define Humidity_register_add       0x01
+#define HDC_1080_ADD            0x40
+#define CONFIGURATION_REG_ADD   0x02
+#define TEMPERATURE_REG_ADD     0x00
+#define HUMIDITY_REG_ADD        0x01
 
 typedef enum {
     Temperature_Resolution_14_bit = 0,

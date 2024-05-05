@@ -1,4 +1,4 @@
-#include "HAL_WsLed.h"
+#include "hal_wsled.h"
 #include "onboard.h"
 
 #define LED_SBIT P1_5
@@ -11,11 +11,11 @@ uint8 WS2812_bit = 0;
 uint16 WS2812_byte = 0;
 
 // 将位存入缓冲区
-void WS2812_StoreBit(uint8 bit);
+void WS2812_storeBit(uint8 bit);
 // 将颜色存入缓冲区
-void WS2812_StoreColor(uint8 color);
+void WS2812_storeColor(uint8 color);
 
-void WS2812_StoreBit(uint8 bit) {
+void WS2812_storeBit(uint8 bit) {
     if (bit) WS2812_buffer[WS2812_byte] |= 1 << WS2812_bit;
     WS2812_bit++;
 
@@ -26,22 +26,22 @@ void WS2812_StoreBit(uint8 bit) {
     }
 }
 
-void WS2812_StoreColor(uint8 color) {
+void WS2812_storeColor(uint8 color) {
     for (uint8 i = 8; i; i--) {
         if ((color >> (i - 1)) & 1) {
-            WS2812_StoreBit(1);
-            WS2812_StoreBit(1);
-            WS2812_StoreBit(0);
+            WS2812_storeBit(1);
+            WS2812_storeBit(1);
+            WS2812_storeBit(0);
         }
         else {
-            WS2812_StoreBit(1);
-            WS2812_StoreBit(0);
-            WS2812_StoreBit(0);
+            WS2812_storeBit(1);
+            WS2812_storeBit(0);
+            WS2812_storeBit(0);
         }
     }
 }
 
-void Hal_WsLed_SetRGB(uint8 red, uint8 green, uint8 blue) {
+void hal_wsled_setRgb(uint8 red, uint8 green, uint8 blue) {
     WS2812_bit = 0;
     WS2812_byte = 0;
 
@@ -49,9 +49,9 @@ void Hal_WsLed_SetRGB(uint8 red, uint8 green, uint8 blue) {
     for (uint16 i = 0; i < WS2812_bufferSize; i++)
         WS2812_buffer[i] = 0;
 
-    WS2812_StoreColor(green);
-    WS2812_StoreColor(red);
-    WS2812_StoreColor(blue);
+    WS2812_storeColor(green);
+    WS2812_storeColor(red);
+    WS2812_storeColor(blue);
 
     for (uint16 j = 0; j < WS2812_bufferSize; j++) {
         U0DBUF = WS2812_buffer[j];
@@ -59,7 +59,7 @@ void Hal_WsLed_SetRGB(uint8 red, uint8 green, uint8 blue) {
     }
 }
 
-void Hal_WsLed_Init(void) {
+void hal_wsled_init(void) {
     P1SEL |= BV(5);  // 0=GPIO 1=Peripheral (SPI)
     P1DIR |= BV(5);  // 1=output
     P1INP &= ~BV(5);  // 1=no pulling
@@ -69,5 +69,5 @@ void Hal_WsLed_Init(void) {
     U0GCR = 0x10;    // UART0 Baud_E
     U0BAUD = 0x40;   // UART0 Baud_M
 
-    Hal_WsLed_SetRGB(0, 0, 0);
+    hal_wsled_setRgb(0, 0, 0);
 }

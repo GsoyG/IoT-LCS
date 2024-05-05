@@ -33,7 +33,7 @@
 #include "onboard.h"
 
 #include "HAL/hal_i2c.h"
-#include "HAL/HAL_WsLed.h"
+#include "HAL/hal_wsled.h"
 #include "HAL/hal_hdc1080.h"
 
 // GLOBAL VARIABLES
@@ -134,7 +134,7 @@ void zclSmartLight_Init( byte task_id ) {
 #endif
 
   hal_i2c_init();
-  Hal_WsLed_Init();
+  hal_wsled_init();
   hal_hdc1080_init(Temperature_Resolution_14_bit, Humidity_Resolution_14_bit);
 
   // If it is not on a network, blink the LED
@@ -184,11 +184,11 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
 
   if (events & SMARTLIGHT_LED_BLINK_EVT) {
     if (zclSmartLight_OnOff == LIGHT_ON) {
-      Hal_WsLed_SetRGB(0, 0, 0);
+      hal_wsled_setRgb(0, 0, 0);
       zclSmartLight_OnOff = LIGHT_OFF;
     }
     else {
-      Hal_WsLed_SetRGB(255, 255, 255);
+      hal_wsled_setRgb(255, 255, 255);
       zclSmartLight_OnOff = LIGHT_ON;
     }
     return (events ^ SMARTLIGHT_LED_BLINK_EVT);

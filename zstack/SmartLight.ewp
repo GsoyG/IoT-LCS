@@ -3545,10 +3545,10 @@
                 <name>$PROJ_DIR$\source\HAL\hal_i2c.h</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\HAL_WsLed.c</name>
+                <name>$PROJ_DIR$\source\HAL\hal_wsled.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\HAL_WsLed.h</name>
+                <name>$PROJ_DIR$\source\HAL\hal_wsled.h</name>
             </file>
         </group>
         <group>

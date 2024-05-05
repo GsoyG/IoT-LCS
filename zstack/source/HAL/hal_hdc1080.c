@@ -28,14 +28,14 @@ void hal_hdc1080_init(Temp_Reso Temperature_Resolution_x_bit, Humi_Reso Humidity
     data_send[0] = (config_reg_value >> 8);
     data_send[1] = (config_reg_value & 0x00ff);
 
-    hal_i2c_write(HDC_1080_ADD << 1, Configuration_register_add, data_send, 2);
+    hal_i2c_write(HDC_1080_ADD << 1, CONFIGURATION_REG_ADD, data_send, 2);
 }
 
 
 uint8 hal_hdc1080_measurement(float* temperature, uint8* humidity) {
     uint8 receive_data[4];
     uint16 temp_x, humi_x;
-    uint8 send_data = Temperature_register_add;
+    uint8 send_data = TEMPERATURE_REG_ADD;
 
     hal_i2c_transmit(HDC_1080_ADD << 1, &send_data, 1);
 
