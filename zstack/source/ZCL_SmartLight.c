@@ -32,7 +32,9 @@
 
 #include "onboard.h"
 
+#include "HAL/hal_i2c.h"
 #include "HAL/HAL_WsLed.h"
+#include "HAL/hal_hdc1080.h"
 
 // GLOBAL VARIABLES
 
@@ -131,7 +133,9 @@ void zclSmartLight_Init( byte task_id ) {
   }
 #endif
 
+  hal_i2c_init();
   Hal_WsLed_Init();
+  hal_hdc1080_init(Temperature_Resolution_14_bit, Humidity_Resolution_14_bit);
 
   // If it is not on a network, blink the LED
   if (!bdbAttributes.bdbNodeIsOnANetwork) {

@@ -3527,6 +3527,24 @@
         <group>
             <name>HAL</name>
             <file>
+                <name>$PROJ_DIR$\source\HAL\hal_delay.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\source\HAL\hal_delay.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\source\HAL\hal_hdc1080.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\source\HAL\hal_hdc1080.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\source\HAL\hal_i2c.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\source\HAL\hal_i2c.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\source\HAL\HAL_WsLed.c</name>
             </file>
             <file>
