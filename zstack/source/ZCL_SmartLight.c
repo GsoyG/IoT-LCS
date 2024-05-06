@@ -52,6 +52,8 @@ static void zclSmartLight_BindNotification( bdbBindNotificationData_t *data );
 static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable );
 #endif
 
+void zclSmartLight_Reporting(void);
+
 static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg);
 
 // Functions to process ZCL Foundation incoming Command/Response messages
@@ -139,11 +141,14 @@ void zclSmartLight_Init( byte task_id ) {
 
   // If it is not on a network, blink the LED
   if (!bdbAttributes.bdbNodeIsOnANetwork) {
-    osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_LED_BLINK_EVT, 1000);
+    osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_LED_BLINK_EVT, 1000); // 1 second
   }
 
   // Start BDB Commissioning
   bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
+
+  // Start measurement task for reporting of values
+  osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_REPORTING__EVT, 10000); // 10 seconds for debug
 }
 
 // Event Loop Processor for zclGeneral.
@@ -182,6 +187,7 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
   }
 #endif
 
+  // Led blink event
   if (events & SMARTLIGHT_LED_BLINK_EVT) {
     if (zclSmartLight_OnOff == LIGHT_ON) {
       hal_wsled_setRgb(0, 0, 0);
@@ -192,6 +198,12 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
       zclSmartLight_OnOff = LIGHT_ON;
     }
     return (events ^ SMARTLIGHT_LED_BLINK_EVT);
+  }
+
+  // Attributes reporting event
+  if (events & SMARTLIGHT_REPORTING__EVT) {
+    zclSmartLight_Reporting();
+    return (events ^ SMARTLIGHT_REPORTING__EVT);
   }
 
   // Discard unknown events
@@ -226,6 +238,29 @@ static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable ) {
   else HalLedSet ( HAL_LED_1, HAL_LED_MODE_OFF );
 }
 #endif
+
+void zclSmartLight_Reporting(void) {
+  const uint8 NUM_ATTRIBUTES = 1;
+  static uint16 zclSmartLight_SeqNum = 0;
+
+  zclReportCmd_t* pReportCmd;
+  pReportCmd = osal_mem_alloc(sizeof(zclReportCmd_t) + (NUM_ATTRIBUTES * sizeof(zclReport_t)));
+  if (pReportCmd != NULL) {
+    pReportCmd->numAttr = NUM_ATTRIBUTES;
+
+    pReportCmd->attrList[0].attrID = ATTRID_ON_OFF;
+    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_BOOLEAN;
+    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
+
+    afAddrType_t zclSmartLight_DstAddr;
+    zclSmartLight_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
+    zclSmartLight_DstAddr.addr.shortAddr = 0;
+    zclSmartLight_DstAddr.endPoint = 1;
+
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+  }
+  osal_mem_free(pReportCmd);
+}
 
 // Callback in which the status of the commissioning process are reported
 static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t* bdbCommissioningModeMsg) {
