@@ -3,10 +3,10 @@
 
 #include "ZComDef.h"
 
-#define HDC_1080_ADD            0x40
-#define CONFIGURATION_REG_ADD   0x02
+#define HDC_1080_ADD            0x80
 #define TEMPERATURE_REG_ADD     0x00
 #define HUMIDITY_REG_ADD        0x01
+#define CONFIGURATION_REG_ADD   0x02
 
 typedef enum {
     Temperature_Resolution_14_bit = 0,
@@ -19,6 +19,6 @@ typedef enum {
     Humidity_Resolution_8_bit = 2
 } Humi_Reso;
 
-void hal_hdc1080_init(Temp_Reso Temperature_Resolution_x_bit, Humi_Reso Humidity_Resolution_x_bit);
+void hal_hdc1080_init(Temp_Reso temperature_resolution, Humi_Reso humidity_resolution);
 void hal_hdc1080_measurement(uint16* temperature, uint16* humidity);
 #endif

@@ -5,9 +5,8 @@
 #define SCL P1_7
 #define SDA P1_6
 
-#define SCLDirOut() P1DIR |= 0x04
-#define SDADirOut() P1DIR |= 0x08
-#define SDADirIn()  P1DIR &= ~0x08
+#define SDADirOut() P1DIR |= BV(6)
+#define SDADirIn()  P1DIR &= ~BV(6)
 
 void I2C_start(void);
 
@@ -15,13 +14,14 @@ void I2C_stop(void);
 
 void I2C_ack(uint8 h);
 
-uint8 I2C_checkAck(void);
+uint8 I2C_waitAck(void);
 
 void I2C_writeByte(uint8 b);
 
 uint8 I2C_readByte(void);
 
 void I2C_start(void) {
+    SDADirOut();
     SDA = 1;
     SCL = 1;
     hal_delay_us(1);
@@ -30,34 +30,43 @@ void I2C_start(void) {
 }
 
 void I2C_stop(void) {
+    SDADirOut();
     SCL = 0;
     SDA = 0;
     SCL = 1;
     SDA = 1;
 }
 
+// 1 to ACK, 0 to NACK
 void I2C_ack(uint8 h) {
+    SDADirOut();
     SCL = 0;
-    SDA = h & 0x01;
+    SDA = h & 0;
     SCL = 1;
     hal_delay_us(1);
     SCL = 0;
 }
 
-uint8 I2C_checkAck(void) {
-    P1DIR |= BV(6);
+uint8 I2C_waitAck(void) {
+    SDADirOut();
     SCL = 0;
     SDA = 1;
     SCL = 1;
-    if (SDA == 1) {
-        SCL = 0;
-        return 0;
+    SDADirIn();
+    uint8 count = 0;
+    while (SDA) {
+        if (count > 250) {
+            SCL = 0;
+            return 0;
+        }
+        count++;
     }
     SCL = 0;
     return 1;
 }
 
 void I2C_writeByte(uint8 b) {
+    SDADirOut();
     uint8 e = 8;
     while (e--) {
         SCL = 0;
@@ -67,15 +76,16 @@ void I2C_writeByte(uint8 b) {
         SCL = 1;
     }
     SCL = 0;
-    I2C_checkAck();
+    I2C_waitAck();
 }
 
 uint8 I2C_readByte(void) {
+    SDADirOut();
     uint8 i = 8;
     uint8 c = 0;
     SCL = 0;
     SDA = 1;
-    P1DIR &= ~BV(6); // input mode
+    SDADirIn();
     while (i--) {
         c <<= 1;
         SCL = 0;
