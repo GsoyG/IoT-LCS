@@ -32,7 +32,7 @@ void hal_hdc1080_init(Temp_Reso Temperature_Resolution_x_bit, Humi_Reso Humidity
 }
 
 
-uint8 hal_hdc1080_measurement(float* temperature, uint8* humidity) {
+void hal_hdc1080_measurement(uint16* temperature, uint16* humidity) {
     uint8 receive_data[4];
     uint16 temp_x, humi_x;
     uint8 send_data = TEMPERATURE_REG_ADD;
@@ -50,9 +50,6 @@ uint8 hal_hdc1080_measurement(float* temperature, uint8* humidity) {
     temp_x = ((receive_data[0] << 8) | receive_data[1]);
     humi_x = ((receive_data[2] << 8) | receive_data[3]);
 
-    *temperature = ((temp_x / 65536.0) * 165.0) - 40.0;
-    *humidity = (uint8)((humi_x / 65536.0) * 100.0);
-
-    return 0;
-
+    *temperature = (uint16)(((temp_x / 65536.0) * 165.0) - 40.0);
+    *humidity = (uint16)((humi_x / 65536.0) * 100.0);
 }

@@ -20,5 +20,5 @@ typedef enum {
 } Humi_Reso;
 
 void hal_hdc1080_init(Temp_Reso Temperature_Resolution_x_bit, Humi_Reso Humidity_Resolution_x_bit);
-uint8 hal_hdc1080_measurement(float* temperature, uint8* humidity);
+void hal_hdc1080_measurement(uint16* temperature, uint16* humidity);
 #endif

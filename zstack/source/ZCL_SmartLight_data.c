@@ -4,8 +4,9 @@
 #include "ZDConfig.h"
 
 #include "zcl.h"
-#include "zcl_general.h"
 #include "zcl_ha.h"
+#include "zcl_ms.h"
+#include "zcl_general.h"
 #include "zcl_lighting.h"
 
 #include "ZCL_SmartLight.h"
@@ -37,6 +38,12 @@ uint16 zclSmartLight_IdentifyTime;
 
 // On/Off Cluster
 uint8 zclSmartLight_OnOff;
+
+// Temperature Measurement Cluster
+uint16 zclSmartLight_Temperature;
+
+// Relative Humidity Cluster
+uint16 zclSmartLight_Humidity;
 
 /* SMARTLIGHT_TODO: declare attribute variables here. If its value can change,
  * initialize it in zclSmartLight_ResetAttributesToDefaultValues. If its
@@ -187,6 +194,42 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] = {
       (void*)&zclSmartLight_clusterRevision_all
     }
   },
+  {
+    ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT,
+    {
+      ATTRID_MS_TEMPERATURE_MEASURED_VALUE,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
+      (void*)&zclSmartLight_Temperature
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT,
+    {
+      ATTRID_CLUSTER_REVISION,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ,
+      (void*)&zclSmartLight_clusterRevision_all
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY,
+    {
+      ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
+      (void*)&zclSmartLight_Humidity
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY,
+    {
+      ATTRID_CLUSTER_REVISION,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ,
+      (void*)&zclSmartLight_clusterRevision_all
+    }
+  }
 };
 
 uint8 CONST zclSmartLight_NumAttributes = ( sizeof(zclSmartLight_Attrs) / sizeof(zclSmartLight_Attrs[0]) );
@@ -195,7 +238,9 @@ uint8 CONST zclSmartLight_NumAttributes = ( sizeof(zclSmartLight_Attrs) / sizeof
 const cId_t zclSmartLight_InClusterList[] = {
   ZCL_CLUSTER_ID_GEN_BASIC,
   ZCL_CLUSTER_ID_GEN_IDENTIFY,
-  ZCL_CLUSTER_ID_GEN_ON_OFF
+  ZCL_CLUSTER_ID_GEN_ON_OFF,
+  ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT,
+  ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY
   // SMARTLIGHT_TODO: Add application specific Input Clusters Here. 
   // See zcl.h for Cluster ID definitions
 };
@@ -247,6 +292,8 @@ void zclSmartLight_ResetAttributesToDefaultValues(void) {
 #endif
 
   zclSmartLight_OnOff = LIGHT_OFF;
+  zclSmartLight_Temperature = 0;
+  zclSmartLight_Humidity = 0;
 
   /* SMARTLIGHT_TODO: initialize cluster attribute variables. */
 }

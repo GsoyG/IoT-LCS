@@ -9,6 +9,7 @@
 
 #include "zcl.h"
 #include "zcl_ha.h"
+#include "zcl_ms.h"
 #include "zcl_diagnostic.h"
 #include "ZCL_SmartLight.h"
 #include "ZCL/ZCL_SmartLight_General.h"
@@ -41,6 +42,12 @@
 byte zclSmartLight_TaskID;
 
 devStates_t zclSmartLight_NwkState = DEV_INIT;
+
+// Temperature Measurement Cluster
+extern uint16 zclSmartLight_Temperature;
+
+// Relative Humidity Cluster
+extern uint16 zclSmartLight_Humidity;
 
 // LOCAL FUNCTIONS
 
@@ -168,6 +175,7 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
           zclSmartLight_NwkState = (devStates_t)(MSGpkt->hdr.status);
           // If the device is leaving the network, start commission process
           if (zclSmartLight_NwkState == DEV_NWK_ORPHAN) {
+            zclSmartLight_ResetAttributesToDefaultValues();
             osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_LED_BLINK_EVT, 1000);
             bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
           }
@@ -202,6 +210,7 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
 
   // Attributes reporting event
   if (events & SMARTLIGHT_REPORTING__EVT) {
+    hal_hdc1080_measurement(&zclSmartLight_Temperature, &zclSmartLight_Humidity);
     zclSmartLight_Reporting();
     return (events ^ SMARTLIGHT_REPORTING__EVT);
   }
@@ -240,26 +249,53 @@ static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable ) {
 #endif
 
 void zclSmartLight_Reporting(void) {
-  const uint8 NUM_ATTRIBUTES = 1;
   static uint16 zclSmartLight_SeqNum = 0;
+  afAddrType_t zclSmartLight_DstAddr;
+  zclSmartLight_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
+  zclSmartLight_DstAddr.addr.shortAddr = 0;
+  zclSmartLight_DstAddr.endPoint = 1;
 
-  zclReportCmd_t* pReportCmd;
-  pReportCmd = osal_mem_alloc(sizeof(zclReportCmd_t) + (NUM_ATTRIBUTES * sizeof(zclReport_t)));
-  if (pReportCmd != NULL) {
-    pReportCmd->numAttr = NUM_ATTRIBUTES;
+  const uint8 pReportCmd_GEN_ON_OFF_NUM = 1;
+  zclReportCmd_t* pReportCmd_GEN_ON_OFF;
+  pReportCmd_GEN_ON_OFF = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_GEN_ON_OFF_NUM * sizeof(zclReport_t)));
+  if (pReportCmd_GEN_ON_OFF != NULL) {
+    pReportCmd_GEN_ON_OFF->numAttr = pReportCmd_GEN_ON_OFF_NUM;
 
-    pReportCmd->attrList[0].attrID = ATTRID_ON_OFF;
-    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_BOOLEAN;
-    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
+    pReportCmd_GEN_ON_OFF->attrList[0].attrID = ATTRID_ON_OFF;
+    pReportCmd_GEN_ON_OFF->attrList[0].dataType = ZCL_DATATYPE_BOOLEAN;
+    pReportCmd_GEN_ON_OFF->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
 
-    afAddrType_t zclSmartLight_DstAddr;
-    zclSmartLight_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
-    zclSmartLight_DstAddr.addr.shortAddr = 0;
-    zclSmartLight_DstAddr.endPoint = 1;
-
-    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd_GEN_ON_OFF, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
   }
-  osal_mem_free(pReportCmd);
+  osal_mem_free(pReportCmd_GEN_ON_OFF);
+
+  const uint8 pReportCmd_MS_TEMP_NUM = 1;
+  zclReportCmd_t* pReportCmd_MS_TEMP;
+  pReportCmd_MS_TEMP = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_MS_TEMP_NUM * sizeof(zclReport_t)));
+  if (pReportCmd_MS_TEMP != NULL) {
+    pReportCmd_MS_TEMP->numAttr = pReportCmd_MS_TEMP_NUM;
+
+    pReportCmd_MS_TEMP->attrList[0].attrID = ATTRID_MS_TEMPERATURE_MEASURED_VALUE;
+    pReportCmd_MS_TEMP->attrList[0].dataType = ZCL_DATATYPE_UINT16;
+    pReportCmd_MS_TEMP->attrList[0].attrData = (void*)(&zclSmartLight_Temperature);
+
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT, pReportCmd_MS_TEMP, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+  }
+  osal_mem_free(pReportCmd_MS_TEMP);
+
+  const uint8 pReportCmd_MS_HUMIDITY_NUM = 1;
+  zclReportCmd_t* pReportCmd_MS_HUMIDITY;
+  pReportCmd_MS_HUMIDITY = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_MS_HUMIDITY_NUM * sizeof(zclReport_t)));
+  if (pReportCmd_MS_HUMIDITY != NULL) {
+    pReportCmd_MS_HUMIDITY->numAttr = pReportCmd_MS_HUMIDITY_NUM;
+
+    pReportCmd_MS_HUMIDITY->attrList[0].attrID = ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE;
+    pReportCmd_MS_HUMIDITY->attrList[0].dataType = ZCL_DATATYPE_UINT16;
+    pReportCmd_MS_HUMIDITY->attrList[0].attrData = (void*)(&zclSmartLight_Humidity);
+
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY, pReportCmd_MS_HUMIDITY, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+  }
+  osal_mem_free(pReportCmd_MS_HUMIDITY);
 }
 
 // Callback in which the status of the commissioning process are reported

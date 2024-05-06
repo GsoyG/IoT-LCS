@@ -4189,6 +4189,12 @@
         <file>
             <name>C:\Texas Instruments\Z-Stack 3.0.2\Projects\zstack\HomeAutomation\Source\zcl_ha.h</name>
         </file>
+        <file>
+            <name>C:\Texas Instruments\Z-Stack 3.0.2\Components\stack\zcl\zcl_ms.c</name>
+        </file>
+        <file>
+            <name>C:\Texas Instruments\Z-Stack 3.0.2\Components\stack\zcl\zcl_ms.h</name>
+        </file>
     </group>
     <group>
         <name>Security</name>
