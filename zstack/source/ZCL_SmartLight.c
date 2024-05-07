@@ -43,6 +43,9 @@ byte zclSmartLight_TaskID;
 
 devStates_t zclSmartLight_NwkState = DEV_INIT;
 
+// Illuminance Measurement Cluster
+extern uint16 zclSmartLight_Illuminance;
+
 // Temperature Measurement Cluster
 extern uint16 zclSmartLight_Temperature;
 
@@ -264,6 +267,11 @@ void zclSmartLight_Reporting(void) {
     pReportCmd->attrList[0].dataType = ZCL_DATATYPE_BOOLEAN;
     pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
     zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+
+    // pReportCmd->attrList[0].attrID = ATTRID_MS_ILLUMINANCE_MEASURED_VALUE;
+    // pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
+    // pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Illuminance);
+    // zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
 
     pReportCmd->attrList[0].attrID = ATTRID_MS_TEMPERATURE_MEASURED_VALUE;
     pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;

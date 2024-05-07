@@ -39,6 +39,9 @@ uint16 zclSmartLight_IdentifyTime;
 // On/Off Cluster
 uint8 zclSmartLight_OnOff;
 
+// Illuminance Measurement Cluster
+uint16 zclSmartLight_Illuminance;
+
 // Temperature Measurement Cluster
 uint16 zclSmartLight_Temperature;
 
@@ -195,6 +198,24 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] = {
     }
   },
   {
+    ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT,
+    {
+      ATTRID_MS_ILLUMINANCE_MEASURED_VALUE,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ,
+      (void*)&zclSmartLight_Illuminance
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT,
+    {
+      ATTRID_CLUSTER_REVISION,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ,
+      (void*)&zclSmartLight_clusterRevision_all
+    }
+  },
+  {
     ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT,
     {
       ATTRID_MS_TEMPERATURE_MEASURED_VALUE,
@@ -292,6 +313,7 @@ void zclSmartLight_ResetAttributesToDefaultValues(void) {
 #endif
 
   zclSmartLight_OnOff = LIGHT_OFF;
+  zclSmartLight_Illuminance = 0;
   zclSmartLight_Temperature = 0;
   zclSmartLight_Humidity = 0;
 
