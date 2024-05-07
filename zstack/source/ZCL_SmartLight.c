@@ -255,47 +255,27 @@ void zclSmartLight_Reporting(void) {
   zclSmartLight_DstAddr.addr.shortAddr = 0;
   zclSmartLight_DstAddr.endPoint = 1;
 
-  const uint8 pReportCmd_GEN_ON_OFF_NUM = 1;
-  zclReportCmd_t* pReportCmd_GEN_ON_OFF;
-  pReportCmd_GEN_ON_OFF = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_GEN_ON_OFF_NUM * sizeof(zclReport_t)));
-  if (pReportCmd_GEN_ON_OFF != NULL) {
-    pReportCmd_GEN_ON_OFF->numAttr = pReportCmd_GEN_ON_OFF_NUM;
+  const uint8 pReportCmd_NUM = 1;
+  zclReportCmd_t* pReportCmd;
+  pReportCmd = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_NUM * sizeof(zclReport_t)));
+  if (pReportCmd != NULL) {
+    pReportCmd->numAttr = pReportCmd_NUM;
+    pReportCmd->attrList[0].attrID = ATTRID_ON_OFF;
+    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_BOOLEAN;
+    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
 
-    pReportCmd_GEN_ON_OFF->attrList[0].attrID = ATTRID_ON_OFF;
-    pReportCmd_GEN_ON_OFF->attrList[0].dataType = ZCL_DATATYPE_BOOLEAN;
-    pReportCmd_GEN_ON_OFF->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
+    pReportCmd->attrList[0].attrID = ATTRID_MS_TEMPERATURE_MEASURED_VALUE;
+    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
+    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Temperature);
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
 
-    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd_GEN_ON_OFF, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+    pReportCmd->attrList[0].attrID = ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE;
+    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
+    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Humidity);
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
   }
-  osal_mem_free(pReportCmd_GEN_ON_OFF);
-
-  const uint8 pReportCmd_MS_TEMP_NUM = 1;
-  zclReportCmd_t* pReportCmd_MS_TEMP;
-  pReportCmd_MS_TEMP = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_MS_TEMP_NUM * sizeof(zclReport_t)));
-  if (pReportCmd_MS_TEMP != NULL) {
-    pReportCmd_MS_TEMP->numAttr = pReportCmd_MS_TEMP_NUM;
-
-    pReportCmd_MS_TEMP->attrList[0].attrID = ATTRID_MS_TEMPERATURE_MEASURED_VALUE;
-    pReportCmd_MS_TEMP->attrList[0].dataType = ZCL_DATATYPE_UINT16;
-    pReportCmd_MS_TEMP->attrList[0].attrData = (void*)(&zclSmartLight_Temperature);
-
-    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT, pReportCmd_MS_TEMP, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
-  }
-  osal_mem_free(pReportCmd_MS_TEMP);
-
-  const uint8 pReportCmd_MS_HUMIDITY_NUM = 1;
-  zclReportCmd_t* pReportCmd_MS_HUMIDITY;
-  pReportCmd_MS_HUMIDITY = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_MS_HUMIDITY_NUM * sizeof(zclReport_t)));
-  if (pReportCmd_MS_HUMIDITY != NULL) {
-    pReportCmd_MS_HUMIDITY->numAttr = pReportCmd_MS_HUMIDITY_NUM;
-
-    pReportCmd_MS_HUMIDITY->attrList[0].attrID = ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE;
-    pReportCmd_MS_HUMIDITY->attrList[0].dataType = ZCL_DATATYPE_UINT16;
-    pReportCmd_MS_HUMIDITY->attrList[0].attrData = (void*)(&zclSmartLight_Humidity);
-
-    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY, pReportCmd_MS_HUMIDITY, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
-  }
-  osal_mem_free(pReportCmd_MS_HUMIDITY);
+  osal_mem_free(pReportCmd);
 }
 
 // Callback in which the status of the commissioning process are reported
