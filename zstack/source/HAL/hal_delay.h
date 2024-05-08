@@ -1,7 +1,7 @@
 #ifndef HAL_DELAY_H
 #define HAL_DELAY_H
 
-#include "ZComDef.h"
+#include "hal_types.h"
 
 extern void hal_delay(uint16 ms);
 

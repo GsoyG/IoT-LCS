@@ -1,7 +1,7 @@
 #ifndef HAL_WSLED_H
 #define HAL_WSLED_H
 
-#include "ZComDef.h"
+#include "hal_types.h"
 
 // 初始化 WS2812B LED
 void hal_wsled_init(void);

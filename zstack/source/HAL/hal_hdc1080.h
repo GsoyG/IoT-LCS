@@ -1,7 +1,7 @@
 #ifndef HAL_HDC1080_H
 #define HAL_HDC1080_H
 
-#include "ZComDef.h"
+#include "hal_types.h"
 
 #define HDC_1080_ADD            0x80
 #define TEMPERATURE_REG_ADD     0x00

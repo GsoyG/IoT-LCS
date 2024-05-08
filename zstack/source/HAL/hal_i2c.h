@@ -1,7 +1,7 @@
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
 
-#include "ZComDef.h"
+#include "hal_types.h"
 
 extern void hal_i2c_init(void);
 
