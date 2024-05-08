@@ -36,6 +36,7 @@
 #include "HAL/hal_i2c.h"
 #include "HAL/hal_wsled.h"
 #include "HAL/hal_hdc1080.h"
+#include "HAL/hal_bh1750.h"
 
 // GLOBAL VARIABLES
 
@@ -148,6 +149,7 @@ void zclSmartLight_Init( byte task_id ) {
   hal_i2c_init();
   hal_wsled_init();
   hal_hdc1080_init(Temperature_Resolution_14_bit, Humidity_Resolution_14_bit);
+  hal_bh1750_init_ex(BH1750FVI_MODE_HIGH_RESOLUTION_MODE, BH1750FVI_DEFAULT_MEASUREMENT_TIME);
 
   // If it is not on a network, blink the LED
   if (!bdbAttributes.bdbNodeIsOnANetwork) {
@@ -214,7 +216,10 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
   // Attributes reporting event
   if (events & SMARTLIGHT_REPORTING__EVT) {
     hal_hdc1080_measurement(&zclSmartLight_Temperature, &zclSmartLight_Humidity);
+    hal_bh1750_measurement(&zclSmartLight_Illuminance);
+
     zclSmartLight_Reporting();
+
     return (events ^ SMARTLIGHT_REPORTING__EVT);
   }
 
@@ -268,10 +273,10 @@ void zclSmartLight_Reporting(void) {
     pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
     zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
 
-    // pReportCmd->attrList[0].attrID = ATTRID_MS_ILLUMINANCE_MEASURED_VALUE;
-    // pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
-    // pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Illuminance);
-    // zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+    pReportCmd->attrList[0].attrID = ATTRID_MS_ILLUMINANCE_MEASURED_VALUE;
+    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
+    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Illuminance);
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
 
     pReportCmd->attrList[0].attrID = ATTRID_MS_TEMPERATURE_MEASURED_VALUE;
     pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;

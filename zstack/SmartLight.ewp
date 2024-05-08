@@ -3527,6 +3527,12 @@
         <group>
             <name>HAL</name>
             <file>
+                <name>$PROJ_DIR$\source\HAL\hal_bh1750.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\source\HAL\hal_bh1750.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\source\HAL\hal_delay.c</name>
             </file>
             <file>
