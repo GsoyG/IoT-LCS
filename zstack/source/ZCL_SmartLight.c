@@ -146,9 +146,10 @@ void zclSmartLight_Init( byte task_id ) {
   }
 #endif
 
+  // Initialize hardware
   hal_i2c_init();
   hal_wsled_init();
-  hal_hdc1080_init(Temperature_Resolution_14_bit, Humidity_Resolution_14_bit);
+  hal_hdc1080_init();
   hal_bh1750_init();
 
   // If it is not on a network, blink the LED
