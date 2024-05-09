@@ -12,11 +12,11 @@ void I2C_start(void);
 
 void I2C_stop(void);
 
-void I2C_ack(uint8 h);
+void I2C_ack(uint8 ack);
 
-uint8 I2C_waitAck(void);
+bool I2C_waitAck(void);
 
-void I2C_writeByte(uint8 b);
+bool I2C_writeByte(uint8 data);
 
 uint8 I2C_readByte(void);
 
@@ -38,16 +38,16 @@ void I2C_stop(void) {
 }
 
 // 1 to ACK, 0 to NACK
-void I2C_ack(uint8 h) {
+void I2C_ack(uint8 ack) {
     SDADirOut();
     SCL = 0;
-    SDA = h & 0;
+    SDA = ack & 0;
     SCL = 1;
     hal_delay_us(1);
     SCL = 0;
 }
 
-uint8 I2C_waitAck(void) {
+bool I2C_waitAck(void) {
     SDADirOut();
     SCL = 0;
     SDA = 1;
@@ -65,18 +65,18 @@ uint8 I2C_waitAck(void) {
     return 1;
 }
 
-void I2C_writeByte(uint8 b) {
+bool I2C_writeByte(uint8 data) {
     SDADirOut();
     uint8 e = 8;
     while (e--) {
         SCL = 0;
-        if (b & 0x80)SDA = 1;
+        if (data & 0x80)SDA = 1;
         else SDA = 0;
-        b <<= 1;
+        data <<= 1;
         SCL = 1;
     }
     SCL = 0;
-    I2C_waitAck();
+    return I2C_waitAck();
 }
 
 uint8 I2C_readByte(void) {
@@ -106,7 +106,7 @@ void hal_i2c_init(void) {
 
 void hal_i2c_write(uint8 slaveAddr, uint8 regAddr, uint8* data, uint8 length) {
     I2C_start();
-    I2C_writeByte(slaveAddr);
+    I2C_writeByte(slaveAddr << 1);
     I2C_writeByte(regAddr);
     for (uint8 i = 0; i < length; i++) {
         I2C_writeByte(data[i]);
@@ -116,10 +116,10 @@ void hal_i2c_write(uint8 slaveAddr, uint8 regAddr, uint8* data, uint8 length) {
 
 void hal_i2c_read(uint8 slaveAddr, uint8 regAddr, uint8* data, uint8 length) {
     I2C_start();
-    I2C_writeByte(slaveAddr);
+    I2C_writeByte(slaveAddr << 1);
     I2C_writeByte(regAddr);
     I2C_start();
-    I2C_writeByte(slaveAddr + 1);
+    I2C_writeByte((slaveAddr << 1) + 1);
     for (uint8 i = 0; i < length; i++) {
         data[i] = I2C_readByte();
         I2C_ack(i < length ? 1 : 0);
@@ -127,18 +127,19 @@ void hal_i2c_read(uint8 slaveAddr, uint8 regAddr, uint8* data, uint8 length) {
     I2C_stop();
 }
 
-void hal_i2c_transmit(uint8 slaveAddr, uint8* data, uint8 length) {
+bool hal_i2c_transmit(uint8 slaveAddr, uint8* data, uint8 length) {
     I2C_start();
-    I2C_writeByte(slaveAddr);
+    if (!I2C_writeByte(slaveAddr << 1)) return 0;
     for (uint8 i = 0; i < length; i++) {
-        I2C_writeByte(data[i]);
+        if (!I2C_writeByte(data[i])) return 0;
     }
     I2C_stop();
+    return 1;
 }
 
 void hal_i2c_receive(uint8 slaveAddr, uint8* data, uint8 length) {
     I2C_start();
-    I2C_writeByte(slaveAddr + 1);
+    I2C_writeByte((slaveAddr << 1) + 1);
     for (uint8 i = 0; i < length; i++) {
         data[i] = I2C_readByte();
         I2C_ack(i < length ? 1 : 0);

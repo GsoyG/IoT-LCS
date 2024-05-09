@@ -3,7 +3,7 @@
 
 #include "hal_types.h"
 
-#define HDC_1080_ADD            0x80
+#define HDC_1080_ADD            0x40
 #define TEMPERATURE_REG_ADD     0x00
 #define HUMIDITY_REG_ADD        0x01
 #define CONFIGURATION_REG_ADD   0x02
