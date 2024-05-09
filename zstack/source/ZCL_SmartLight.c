@@ -149,7 +149,7 @@ void zclSmartLight_Init( byte task_id ) {
   hal_i2c_init();
   hal_wsled_init();
   hal_hdc1080_init(Temperature_Resolution_14_bit, Humidity_Resolution_14_bit);
-  hal_bh1750_init_ex(BH1750FVI_MODE_HIGH_RESOLUTION_MODE, BH1750FVI_DEFAULT_MEASUREMENT_TIME);
+  hal_bh1750_init();
 
   // If it is not on a network, blink the LED
   if (!bdbAttributes.bdbNodeIsOnANetwork) {

@@ -3,6 +3,7 @@
 #include "hal_delay.h"
 
 #define BH1750FVI_ADDRESS                                   0x23
+
 #define BH1750FVI_COMMAND_POWER_DOWN                        0x00 /**< power down command */
 #define BH1750FVI_COMMAND_POWER_ON                          0x01 /**< power on command */
 #define BH1750FVI_COMMAND_RESET                             0x07 /**< reset command */
@@ -22,33 +23,25 @@ void hal_bh1750_init(void) {
 
     send_data = BH1750FVI_COMMAND_POWER_ON;
     hal_i2c_transmit(BH1750FVI_ADDRESS, &send_data, 1);
-    hal_delay(20);
+    hal_delay(5);
 
     send_data = BH1750FVI_COMMAND_RESET;
     hal_i2c_transmit(BH1750FVI_ADDRESS, &send_data, 1);
-    hal_delay(20);
+    hal_delay(5);
 
-    send_data = BH1750FVI_COMMAND_CHANGE_MEASUREMENT_TIME_HIGH | ((69 >> 5) & 0x07);
-    hal_i2c_transmit(BH1750FVI_ADDRESS, &send_data, 1);
-    send_data = BH1750FVI_COMMAND_CHANGE_MEASUREMENT_TIME_LOW | ((69 >> 0) & 0x1F);
-    hal_i2c_transmit(BH1750FVI_ADDRESS, &send_data, 1);
-    hal_delay(20);
+    hal_bh1750_set_mode(BH1750FVI_DEFAULT_RESOLUTION_MODE);
+    hal_bh1750_set_time(BH1750FVI_DEFAULT_MEASUREMENT_TIME);
 }
 
 void hal_bh1750_init_ex(bh1750_reso_mode resolution_mode, uint8 measurement_time) {
     hal_bh1750_init();
-    hal_bh1750_power_on();
+    hal_bh1750_power(1);
     hal_bh1750_set_mode(resolution_mode);
-    hal_bh1750_set_measurement_time(measurement_time);
+    hal_bh1750_set_time(measurement_time);
 }
 
-void hal_bh1750_power_on(void) {
-    uint8 send_data = BH1750FVI_COMMAND_POWER_ON;
-    hal_i2c_transmit(BH1750FVI_ADDRESS, &send_data, 1);
-}
-
-void hal_bh1750_power_down(void) {
-    uint8 send_data = BH1750FVI_COMMAND_POWER_DOWN;
+void hal_bh1750_power(uint8 on_off) {
+    uint8 send_data = on_off ? BH1750FVI_COMMAND_POWER_ON : BH1750FVI_COMMAND_POWER_DOWN;
     hal_i2c_transmit(BH1750FVI_ADDRESS, &send_data, 1);
 }
 
@@ -56,7 +49,7 @@ void hal_bh1750_set_mode(bh1750_reso_mode resolution_mode) {
     bh1750_resolution_mode = resolution_mode;
 }
 
-void hal_bh1750_set_measurement_time(uint8 measurement_time) {
+void hal_bh1750_set_time(uint8 measurement_time) {
     uint8 send_data;
 
     send_data = BH1750FVI_COMMAND_CHANGE_MEASUREMENT_TIME_HIGH | ((measurement_time >> 5) & 0x07);
@@ -71,50 +64,46 @@ void hal_bh1750_set_measurement_time(uint8 measurement_time) {
 void hal_bh1750_measurement(uint16* illuminance) {
     uint8 send_data;
 
-    if (bh1750_resolution_mode == BH1750FVI_MODE_HIGH_RESOLUTION_MODE) /* high resolution mode */
-    {
-        send_data = BH1750FVI_COMMAND_ONE_TIME_H_RESOLUTION_MODE; /* high resolution mode command */
-    }
-    else if (bh1750_resolution_mode == BH1750FVI_MODE_HIGH_RESOLUTION_MODE2) /* high resolution mode2 */
-    {
-        send_data = BH1750FVI_COMMAND_ONE_TIME_H_RESOLUTION_MODE2; /* high resolution mode2 command */
-    }
-    else if (bh1750_resolution_mode == BH1750FVI_MODE_LOW_RESOLUTION_MODE) /* low resolution mode */
-    {
-        send_data = BH1750FVI_COMMAND_ONE_TIME_L_RESOLUTION_MODE; /* low resolution mode command */
+    switch (bh1750_resolution_mode) {
+    default:
+    case BH1750FVI_MODE_HIGH_RESOLUTION_MODE:
+        send_data = BH1750FVI_COMMAND_ONE_TIME_H_RESOLUTION_MODE;
+        break;
+    case BH1750FVI_MODE_HIGH_RESOLUTION_MODE2:
+        send_data = BH1750FVI_COMMAND_ONE_TIME_H_RESOLUTION_MODE2;
+        break;
+    case BH1750FVI_MODE_LOW_RESOLUTION_MODE:
+        send_data = BH1750FVI_COMMAND_ONE_TIME_L_RESOLUTION_MODE;
+        break;
     }
     hal_i2c_transmit(BH1750FVI_ADDRESS, &send_data, 1);
 
-    if (bh1750_resolution_mode == BH1750FVI_MODE_HIGH_RESOLUTION_MODE) /* high resolution mode */
-    {
-        hal_delay((uint16)(180.0f * (float)(bh1750_measurement_time) / 69.0f) * 3); /* delay the max time */
+    switch (bh1750_resolution_mode) {
+    case BH1750FVI_MODE_HIGH_RESOLUTION_MODE:
+        hal_delay((uint16)((float)bh1750_measurement_time / 69.0f * 180.0f));
+        break;
+    case BH1750FVI_MODE_HIGH_RESOLUTION_MODE2:
+        hal_delay((uint16)((float)bh1750_measurement_time / 69.0f * 180.0f));
+        break;
+    default:
+        hal_delay((uint16)((float)bh1750_measurement_time / 69.0f * 24.0f));
+        break;
     }
-    else if (bh1750_resolution_mode == BH1750FVI_MODE_HIGH_RESOLUTION_MODE2) /* high resolution mode2 */
-    {
-        hal_delay((uint16)(180.0f * (float)(bh1750_measurement_time) / 69.0f) * 3); /* delay the max time */
-    }
-    else /* low resolution mode */
-    {
-        hal_delay((uint16)(24.0f * (float)(bh1750_measurement_time) / 69.0f) * 3); /* delay the max time */
-    }
+
     uint8 receive_data[2];
     hal_i2c_receive(BH1750FVI_ADDRESS, receive_data, 2);
+    uint16 raw = ((receive_data[0] << 8) | receive_data[1]);
 
-    float lux;
-    uint16 raw = ((receive_data[0] << 8) | receive_data[1]); /* get the raw data */
-    if (bh1750_resolution_mode == BH1750FVI_MODE_HIGH_RESOLUTION_MODE) /* high resolution mode */
-    {
-        lux = (float)(raw) / 1.2f * (69.0f / ((float)(bh1750_measurement_time))); /* convert */
-    }
-    else if (bh1750_resolution_mode == BH1750FVI_MODE_HIGH_RESOLUTION_MODE2) /* high resolution mode2 */
-    {
-        lux = (float)(raw) / 1.2f * (69.0f / ((float)(bh1750_measurement_time))) / 2.0f; /* convert */
-    }
-    else /* low resolution mode */
-    {
-        lux = (float)(raw) / 1.2f * (69.0f / ((float)(bh1750_measurement_time))); /* convert */
+    uint16 lux;
+    switch (bh1750_resolution_mode) {
+    default:
+    case BH1750FVI_MODE_HIGH_RESOLUTION_MODE:
+        lux = (uint16)((float)raw / 1.2f * (69.0f / (float)bh1750_measurement_time));
+        break;
+    case BH1750FVI_MODE_HIGH_RESOLUTION_MODE2:
+        lux = (uint16)((float)raw / 1.2f * (69.0f / (float)bh1750_measurement_time) / 2.0f);
+        break;
     }
 
-    // Convert the two bytes to a lux value
-    *illuminance = (uint16)raw;
+    *illuminance = lux;
 }
