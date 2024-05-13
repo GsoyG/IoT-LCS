@@ -1,10 +1,14 @@
 #include "ZCL_SmartLight.h"
-#include "HAL/HAL_WsLed.h"
-#include "ZCL/ZCL_SmartLight_General.h"
+#include "ZCL_SmartLight_Callbacks.h"
+#include "HAL/hal_wsled.h"
 
 void zclSmartLight_BasicResetCB(void);
 void zclSmartLight_OnOffCB(uint8 cmd);
 void zclSmartLight_MoveToLevelCB(zclLCMoveToLevel_t* pCmd);
+
+ZStatus_t zclSmartLight_MoveToHueCB(zclCCMoveToHue_t* pCmd);
+ZStatus_t zclSmartLight_MoveToSaturationCB(zclCCMoveToSaturation_t* pCmd);
+ZStatus_t zclSmartLight_MoveToColorTemperatureCB(zclCCMoveToColorTemperature_t* pCmd);
 
 // ZCL General Profile Callback table
 zclGeneral_AppCallbacks_t zclSmartLight_CmdCallbacks = {
@@ -37,6 +41,26 @@ zclGeneral_AppCallbacks_t zclSmartLight_CmdCallbacks = {
     #endif
     NULL,                       // RSSI Location command
     NULL                        // RSSI Location Response command
+};
+
+zclLighting_AppCallbacks_t zclSmartLight_LightingCallbacks = {
+    zclSmartLight_MoveToHueCB,
+    NULL,
+    NULL,
+    zclSmartLight_MoveToSaturationCB,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    zclSmartLight_MoveToColorTemperatureCB,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 // Callback from the ZCL General Cluster Library to set all the Basic Cluster attributes to default values.
@@ -72,4 +96,34 @@ void zclSmartLight_MoveToLevelCB(zclLCMoveToLevel_t* pCmd) {
     zclSmartLight_OnOff = pCmd->withOnOff;
     if (pCmd->withOnOff == LIGHT_ON) hal_wsled_setBrightness(pCmd->level);
     else hal_wsled_setBrightness(0);
+}
+
+ZStatus_t zclSmartLight_MoveToHueCB(zclCCMoveToHue_t* pCmd) {
+    zclSmartLight_CurrentHue = pCmd->hue;
+    if (zclSmartLight_CurrentHue < 1) zclSmartLight_CurrentHue = 1;
+    if (zclSmartLight_CurrentHue > 254) zclSmartLight_CurrentHue = 254;
+
+    zclSmartLight_ColorMode = COLOR_MODE_CURRENT_HUE_SATURATION;
+    hal_wsled_setHueSat(zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
+    return SUCCESS;
+}
+
+ZStatus_t zclSmartLight_MoveToSaturationCB(zclCCMoveToSaturation_t* pCmd) {
+    zclSmartLight_CurrentSaturation = pCmd->saturation;
+    if (zclSmartLight_CurrentSaturation < 1) zclSmartLight_CurrentSaturation = 1;
+    if (zclSmartLight_CurrentSaturation > 254) zclSmartLight_CurrentSaturation = 254;
+
+    zclSmartLight_ColorMode = COLOR_MODE_CURRENT_HUE_SATURATION;
+    hal_wsled_setHueSat(zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
+    return SUCCESS;
+}
+
+ZStatus_t zclSmartLight_MoveToColorTemperatureCB(zclCCMoveToColorTemperature_t* pCmd) {
+    zclSmartLight_ColorTemperature = pCmd->colorTemperature;
+    if (zclSmartLight_ColorTemperature < 1) zclSmartLight_ColorTemperature = 1;
+    if (zclSmartLight_ColorTemperature > 500) zclSmartLight_ColorTemperature = 500;
+    
+    zclSmartLight_ColorMode = COLOR_MODE_COLOR_TEMPERATURE;
+    hal_wsled_setColorTemp(zclSmartLight_ColorTemperature);
+    return SUCCESS;
 }

@@ -10,7 +10,7 @@
 #include "zcl_lighting.h"
 
 #include "ZCL_SmartLight.h"
-#include "ZCL/ZCL_SmartLight_General.h"
+#include "ZCL_SmartLight_Callbacks.h"
 
 #define SMARTLIGHT_DEVICE_VERSION     0
 #define SMARTLIGHT_FLAGS              0
@@ -41,6 +41,12 @@ uint8 zclSmartLight_OnOff;
 
 // Level Control Cluster
 uint8 zclSmartLight_CurrentLevel;
+
+// Lighting Color Control Cluster
+uint8 zclSmartLight_CurrentHue;
+uint8 zclSmartLight_CurrentSaturation;
+uint16 zclSmartLight_ColorTemperature;
+uint8 zclSmartLight_ColorMode;
 
 // Illuminance Measurement Cluster
 uint16 zclSmartLight_Illuminance;
@@ -219,6 +225,51 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] = {
     }
   },
   {
+    ZCL_CLUSTER_ID_LIGHTING_COLOR_CONTROL,
+    {
+      ATTRID_LIGHTING_COLOR_CONTROL_CURRENT_HUE,
+      ZCL_DATATYPE_UINT8,
+      ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
+      (void*)&zclSmartLight_CurrentHue
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_LIGHTING_COLOR_CONTROL,
+    {
+      ATTRID_LIGHTING_COLOR_CONTROL_CURRENT_SATURATION,
+      ZCL_DATATYPE_UINT8,
+      ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
+      (void*)&zclSmartLight_CurrentSaturation
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_LIGHTING_COLOR_CONTROL,
+    {
+      ATTRID_LIGHTING_COLOR_CONTROL_COLOR_TEMPERATURE,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
+      (void*)&zclSmartLight_ColorTemperature
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_LIGHTING_COLOR_CONTROL,
+    {
+      ATTRID_LIGHTING_COLOR_CONTROL_COLOR_MODE,
+      ZCL_DATATYPE_ENUM8,
+      ACCESS_CONTROL_READ,
+      (void*)&zclSmartLight_ColorMode
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_LIGHTING_COLOR_CONTROL,
+    {
+      ATTRID_CLUSTER_REVISION,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ,
+      (void*)&zclSmartLight_clusterRevision_all
+    }
+  },
+  {
     ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT,
     {
       ATTRID_MS_ILLUMINANCE_MEASURED_VALUE,
@@ -282,6 +333,7 @@ const cId_t zclSmartLight_InClusterList[] = {
   ZCL_CLUSTER_ID_GEN_IDENTIFY,
   ZCL_CLUSTER_ID_GEN_ON_OFF,
   ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL,
+  ZCL_CLUSTER_ID_LIGHTING_COLOR_CONTROL,
   ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT,
   ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY
   // SMARTLIGHT_TODO: Add application specific Input Clusters Here. 
@@ -336,6 +388,12 @@ void zclSmartLight_ResetAttributesToDefaultValues(void) {
 
   zclSmartLight_OnOff = LIGHT_OFF;
   zclSmartLight_CurrentLevel = 254;
+
+  zclSmartLight_CurrentHue = 0;
+  zclSmartLight_CurrentSaturation = 0;
+  zclSmartLight_ColorTemperature = 0;
+  zclSmartLight_ColorMode = COLOR_MODE_COLOR_TEMPERATURE;
+
   zclSmartLight_Illuminance = 0;
   zclSmartLight_Temperature = 0;
   zclSmartLight_Humidity = 0;

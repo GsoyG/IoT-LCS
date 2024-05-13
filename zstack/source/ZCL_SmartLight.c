@@ -12,7 +12,7 @@
 #include "zcl_ms.h"
 #include "zcl_diagnostic.h"
 #include "ZCL_SmartLight.h"
-#include "ZCL/ZCL_SmartLight_General.h"
+#include "ZCL_SmartLight_Callbacks.h"
 
 #include "bdb.h"
 #include "bdb_interface.h"
@@ -110,9 +110,9 @@ void zclSmartLight_Init( byte task_id ) {
   bdb_RegisterSimpleDescriptor( &zclSmartLight_SimpleDesc );
 
   // Register the ZCL General Cluster Library callback functions
-  zclGeneral_RegisterCmdCallbacks( SMARTLIGHT_ENDPOINT, &zclSmartLight_CmdCallbacks );
-  
-  /* SMARTLIGHT_TODO: Register other cluster command callbacks here */
+  zclGeneral_RegisterCmdCallbacks(SMARTLIGHT_ENDPOINT, &zclSmartLight_CmdCallbacks);
+
+  zclLighting_RegisterCmdCallbacks(SMARTLIGHT_ENDPOINT, &zclSmartLight_LightingCallbacks);
 
   // Register the application's attribute list
   zcl_registerAttrList( SMARTLIGHT_ENDPOINT, zclSmartLight_NumAttributes, zclSmartLight_Attrs );

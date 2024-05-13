@@ -3558,15 +3558,6 @@
                 <name>$PROJ_DIR$\source\HAL\hal_wsled.h</name>
             </file>
         </group>
-        <group>
-            <name>ZCL</name>
-            <file>
-                <name>$PROJ_DIR$\source\ZCL\ZCL_SmartLight_General.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\source\ZCL\ZCL_SmartLight_General.h</name>
-            </file>
-        </group>
         <file>
             <name>$PROJ_DIR$\source\OSAL_SmartLight.c</name>
         </file>
@@ -3575,6 +3566,12 @@
         </file>
         <file>
             <name>$PROJ_DIR$\source\ZCL_SmartLight.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\source\ZCL_SmartLight_Callbacks.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\source\ZCL_SmartLight_Callbacks.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\source\ZCL_SmartLight_data.c</name>
@@ -4195,6 +4192,12 @@
         </file>
         <file>
             <name>C:\Texas Instruments\Z-Stack 3.0.2\Projects\zstack\HomeAutomation\Source\zcl_ha.h</name>
+        </file>
+        <file>
+            <name>C:\Texas Instruments\Z-Stack 3.0.2\Components\stack\zcl\zcl_lighting.c</name>
+        </file>
+        <file>
+            <name>C:\Texas Instruments\Z-Stack 3.0.2\Components\stack\zcl\zcl_lighting.h</name>
         </file>
         <file>
             <name>C:\Texas Instruments\Z-Stack 3.0.2\Components\stack\zcl\zcl_ms.c</name>
