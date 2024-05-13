@@ -3528,34 +3528,34 @@
         <group>
             <name>HAL</name>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_bh1750.c</name>
+                <name>$PROJ_DIR$\source\hal\hal_bh1750.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_bh1750.h</name>
+                <name>$PROJ_DIR$\source\hal\hal_bh1750.h</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_delay.c</name>
+                <name>$PROJ_DIR$\source\hal\hal_delay.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_delay.h</name>
+                <name>$PROJ_DIR$\source\hal\hal_delay.h</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_hdc1080.c</name>
+                <name>$PROJ_DIR$\source\hal\hal_hdc1080.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_hdc1080.h</name>
+                <name>$PROJ_DIR$\source\hal\hal_hdc1080.h</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_i2c.c</name>
+                <name>$PROJ_DIR$\source\hal\hal_i2c.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_i2c.h</name>
+                <name>$PROJ_DIR$\source\hal\hal_i2c.h</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_wsled.c</name>
+                <name>$PROJ_DIR$\source\hal\hal_wsled.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\source\HAL\hal_wsled.h</name>
+                <name>$PROJ_DIR$\source\hal\hal_wsled.h</name>
             </file>
         </group>
         <file>

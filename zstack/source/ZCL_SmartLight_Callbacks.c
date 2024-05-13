@@ -1,6 +1,6 @@
 #include "ZCL_SmartLight.h"
 #include "ZCL_SmartLight_Callbacks.h"
-#include "HAL/hal_wsled.h"
+#include "hal/hal_wsled.h"
 
 void zclSmartLight_BasicResetCB(void);
 void zclSmartLight_OnOffCB(uint8 cmd);

@@ -33,10 +33,10 @@
 
 #include "onboard.h"
 
-#include "HAL/hal_i2c.h"
-#include "HAL/hal_wsled.h"
-#include "HAL/hal_hdc1080.h"
-#include "HAL/hal_bh1750.h"
+#include "hal/hal_i2c.h"
+#include "hal/hal_wsled.h"
+#include "hal/hal_hdc1080.h"
+#include "hal/hal_bh1750.h"
 
 // GLOBAL VARIABLES
 
