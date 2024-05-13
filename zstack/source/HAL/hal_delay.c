@@ -1,6 +1,6 @@
 #include "hal_delay.h"
 
-void hal_delay(uint16 ms) {
+void hal_delay_ms(uint16 ms) {
     while (ms--)
         hal_delay_us(1000);
 }

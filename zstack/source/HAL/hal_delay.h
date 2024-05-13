@@ -3,7 +3,7 @@
 
 #include "hal_types.h"
 
-extern void hal_delay(uint16 ms);
+extern void hal_delay_ms(uint16 ms);
 
 extern void hal_delay_us(uint16 us);
 

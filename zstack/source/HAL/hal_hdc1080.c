@@ -44,7 +44,7 @@ void hal_hdc1080_measurement(uint16* temperature, uint16* humidity) {
     /* Delay here 15ms for conversion compelete.
      * Note: datasheet say maximum is 7ms, but when delay=7ms, the read value is not correct
      */
-    hal_delay(30);
+    hal_delay_ms(30);
 
     uint8 receive_data[4];
     hal_i2c_receive(HDC1080_ADDRESS, receive_data, 4);
