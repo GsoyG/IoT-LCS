@@ -39,6 +39,9 @@ uint16 zclSmartLight_IdentifyTime;
 // On/Off Cluster
 uint8 zclSmartLight_OnOff;
 
+// Level Control Cluster
+uint8 zclSmartLight_CurrentLevel;
+
 // Illuminance Measurement Cluster
 uint16 zclSmartLight_Illuminance;
 
@@ -198,6 +201,24 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] = {
     }
   },
   {
+    ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL,
+    {
+      ATTRID_LEVEL_CURRENT_LEVEL,
+      ZCL_DATATYPE_UINT8,
+      ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
+      (void*)&zclSmartLight_CurrentLevel
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL,
+    {
+      ATTRID_CLUSTER_REVISION,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ,
+      (void*)&zclSmartLight_clusterRevision_all
+    }
+  },
+  {
     ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT,
     {
       ATTRID_MS_ILLUMINANCE_MEASURED_VALUE,
@@ -260,6 +281,7 @@ const cId_t zclSmartLight_InClusterList[] = {
   ZCL_CLUSTER_ID_GEN_BASIC,
   ZCL_CLUSTER_ID_GEN_IDENTIFY,
   ZCL_CLUSTER_ID_GEN_ON_OFF,
+  ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL,
   ZCL_CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT,
   ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY
   // SMARTLIGHT_TODO: Add application specific Input Clusters Here. 
@@ -275,16 +297,16 @@ const cId_t zclSmartLight_OutClusterList[] = {
 #define ZCLSMARTLIGHT_MAX_OUTCLUSTERS  (sizeof(zclSmartLight_OutClusterList) / sizeof(zclSmartLight_OutClusterList[0]))
 
 SimpleDescriptionFormat_t zclSmartLight_SimpleDesc = {
-  SMARTLIGHT_ENDPOINT,                  //  int Endpoint;
-  ZCL_HA_PROFILE_ID,                    //  uint16 AppProfId;
+  SMARTLIGHT_ENDPOINT,                    //  int Endpoint;
+  ZCL_HA_PROFILE_ID,                      //  uint16 AppProfId;
   // SMARTLIGHT_TODO: Replace ZCL_HA_DEVICEID_ON_OFF_LIGHT with application specific device ID
-  ZCL_HA_DEVICEID_ON_OFF_LIGHT,         //  uint16 AppDeviceId; 
-  SMARTLIGHT_DEVICE_VERSION,            //  int   AppDevVer:4;
-  SMARTLIGHT_FLAGS,                     //  int   AppFlags:4;
-  ZCLSMARTLIGHT_MAX_INCLUSTERS,         //  byte  AppNumInClusters;
-  (cId_t *)zclSmartLight_InClusterList, //  byte *pAppInClusterList;
-  ZCLSMARTLIGHT_MAX_OUTCLUSTERS,        //  byte  AppNumInClusters;
-  (cId_t *)zclSmartLight_OutClusterList //  byte *pAppInClusterList;
+  ZCL_HA_DEVICEID_COLORED_DIMMABLE_LIGHT, //  uint16 AppDeviceId; 
+  SMARTLIGHT_DEVICE_VERSION,              //  int   AppDevVer:4;
+  SMARTLIGHT_FLAGS,                       //  int   AppFlags:4;
+  ZCLSMARTLIGHT_MAX_INCLUSTERS,           //  byte  AppNumInClusters;
+  (cId_t *)zclSmartLight_InClusterList,   //  byte *pAppInClusterList;
+  ZCLSMARTLIGHT_MAX_OUTCLUSTERS,          //  byte  AppNumInClusters;
+  (cId_t *)zclSmartLight_OutClusterList   //  byte *pAppInClusterList;
 };
 
 // Added to include ZLL Target functionality
@@ -313,6 +335,7 @@ void zclSmartLight_ResetAttributesToDefaultValues(void) {
 #endif
 
   zclSmartLight_OnOff = LIGHT_OFF;
+  zclSmartLight_CurrentLevel = 254;
   zclSmartLight_Illuminance = 0;
   zclSmartLight_Temperature = 0;
   zclSmartLight_Humidity = 0;

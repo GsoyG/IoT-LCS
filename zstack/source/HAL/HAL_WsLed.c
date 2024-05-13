@@ -59,6 +59,10 @@ void hal_wsled_setRgb(uint8 red, uint8 green, uint8 blue) {
     }
 }
 
+void hal_wsled_setBrightness(uint8 brightness) {
+    hal_wsled_setRgb(brightness, brightness, brightness);
+}
+
 void hal_wsled_init(void) {
     P1SEL |= BV(5);  // 0=GPIO 1=Peripheral (SPI)
     P1DIR |= BV(5);  // 1=output

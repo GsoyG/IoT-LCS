@@ -6,5 +6,8 @@
 // OnOff attributes
 extern uint8 zclSmartLight_OnOff;
 
+// Level Control attributes
+extern uint8 zclSmartLight_CurrentLevel;
+
 // ZCL General Profile Callback table
 extern zclGeneral_AppCallbacks_t zclSmartLight_CmdCallbacks;

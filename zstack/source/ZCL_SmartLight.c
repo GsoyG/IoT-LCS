@@ -146,6 +146,8 @@ void zclSmartLight_Init( byte task_id ) {
   }
 #endif
 
+  zclSmartLight_ResetAttributesToDefaultValues();
+
   // Initialize hardware
   hal_i2c_init();
   hal_wsled_init();
@@ -274,10 +276,15 @@ void zclSmartLight_Reporting(void) {
     pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
     zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
 
-    pReportCmd->attrList[0].attrID = ATTRID_MS_ILLUMINANCE_MEASURED_VALUE;
-    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
-    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Illuminance);
-    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+    pReportCmd->attrList[0].attrID = ATTRID_LEVEL_CURRENT_LEVEL;
+    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT8;
+    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_CurrentLevel);
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+
+    // pReportCmd->attrList[0].attrID = ATTRID_MS_ILLUMINANCE_MEASURED_VALUE;
+    // pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
+    // pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Illuminance);
+    // zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
 
     pReportCmd->attrList[0].attrID = ATTRID_MS_TEMPERATURE_MEASURED_VALUE;
     pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;

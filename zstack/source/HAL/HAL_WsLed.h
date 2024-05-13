@@ -6,6 +6,9 @@
 // 初始化 WS2812B LED
 void hal_wsled_init(void);
 
+// 设置 LED 亮度
+void hal_wsled_setBrightness(uint8 brightness);
+
 // 设置 LED RGB 颜色
 void hal_wsled_setRgb(uint8 red, uint8 green, uint8 blue);
 
