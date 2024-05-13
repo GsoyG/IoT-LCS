@@ -23,7 +23,7 @@ async def set_device_state(request):
         return web.Response(status = 400, text = '参数错误：找不到指定参数')
     
     # 设置设备状态
-    data = await device.set_device_state_fast(state_device, state)
+    data = await device.set_device_state(state_device, state)
     if isinstance(data, str):
         return web.Response(status = 429, text = data)
     return web.json_response(data)

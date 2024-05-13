@@ -19,7 +19,6 @@ class DeviceList:
         'password': '',
         'identifier': '',
     }
-    __device_list = []
     __isConnected = False
 
     # 初始化客户端字段
@@ -38,7 +37,7 @@ class DeviceList:
             self.__hostData['password'] = config['password']
 
     # 发送消息并返回响应
-    async def __send(self, command, subscribe, message_header, payload = None):
+    async def __send(self, command, subscribe = '', payload = None):
         if self.__isConnected:
             return "上一个请求的连接未关闭"
 
@@ -51,7 +50,8 @@ class DeviceList:
             self.__isConnected = True
 
             # 订阅消息
-            await client.subscribe(subscribe)
+            if subscribe != '': await client.subscribe(subscribe)
+            await client.subscribe('stat/' + self.__gateway_name + '/RESULT')
 
             # 发布消息
             if payload is not None:
@@ -62,11 +62,15 @@ class DeviceList:
             # 检索响应消息
             try:
                 async with asyncio.timeout(3): # 超时时间为 3 秒
+                    responses = []
                     async for message in client.messages:
                         parsed_msg = json.loads(message.payload)
-                        if message_header in parsed_msg:
-                            self.__isConnected = False
-                            return parsed_msg[message_header]
+                        if command in parsed_msg:
+                            if parsed_msg[command] != 'Done':
+                                responses.append(parsed_msg[command])
+                            else:
+                                self.__isConnected = False
+                                return responses if subscribe != '' else 'Done'
             except asyncio.TimeoutError:
                 self.__isConnected = False
             return "等待请求响应超时"
@@ -75,31 +79,20 @@ class DeviceList:
     async def get_device_list(self):
         # 发送消息并检查返回
         subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
-        data = await self.__send('ZbInfo', subscribe, 'ZbInfo')
+        data = await self.__send('ZbInfo', subscribe)
         if isinstance(data, str): return data
 
         # 更新设备列表
-        self.__device_list.clear()
-        for key, value in data.items():
-            self.__device_list.append(value)
-        return self.__device_list
+        device_list = []
+        for device in data:
+            device_list.append(list(device.values())[0])
+        return device_list
     
     # 设置设备状态信息
     async def set_device_state(self, device, state):
         # 发送消息并检查返回
-        subscribe = 'tele/' + self.__gateway_name + '/SENSOR'
         payload = { 'Device': device, 'Send': state }
-        data = await self.__send('ZbSend', subscribe, 'ZbReceived', payload)
-        if isinstance(data, str): return data
-
-        return data[device]
-    
-    # 设置设备状态信息，无需等待响应消息，响应快两倍
-    async def set_device_state_fast(self, device, state):
-        # 发送消息并检查返回
-        subscribe = 'stat/' + self.__gateway_name + '/RESULT'
-        payload = { 'Device': device, 'Send': state }
-        data = await self.__send('ZbSend', subscribe, 'ZbSend', payload)
+        data = await self.__send('ZbSend', '', payload)
         if data != 'Done': return data
 
         return { 'status': 'OK'}
@@ -107,4 +100,4 @@ class DeviceList:
     # 设置多个设备状态信息
     async def set_device_list_state(self, device_list, state):
         for device in device_list:
-            await self.set_device_state_fast(device, state)
+            await self.set_device_state(device, state)
