@@ -390,7 +390,7 @@ void zclSmartLight_ResetAttributesToDefaultValues(void) {
   zclSmartLight_CurrentLevel = 254;
 
   zclSmartLight_CurrentHue = 0;
-  zclSmartLight_CurrentSaturation = 0;
+  zclSmartLight_CurrentSaturation = 254;
   zclSmartLight_ColorTemperature = 0;
   zclSmartLight_ColorMode = COLOR_MODE_COLOR_TEMPERATURE;
 

@@ -87,15 +87,28 @@ void zclSmartLight_OnOffCB(uint8 cmd) {
         break;
     }
     zclSmartLight_OnOff = state;
-    if (state == LIGHT_ON) hal_wsled_setBrightness(zclSmartLight_CurrentLevel);
-    else hal_wsled_setBrightness(0);
+    if (state == LIGHT_ON) {
+        if (zclSmartLight_ColorMode == COLOR_MODE_COLOR_TEMPERATURE)
+            hal_wsled_setColorTemp(zclSmartLight_CurrentLevel, zclSmartLight_ColorTemperature);
+        else if (zclSmartLight_ColorMode == COLOR_MODE_CURRENT_HUE_SATURATION)
+            hal_wsled_setHueSat(zclSmartLight_CurrentLevel, zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
+    }
+    else hal_wsled_setColorTemp(0, 0);
 }
 
 void zclSmartLight_MoveToLevelCB(zclLCMoveToLevel_t* pCmd) {
     zclSmartLight_CurrentLevel = pCmd->level;
+    if (zclSmartLight_CurrentLevel < 1) zclSmartLight_CurrentLevel = 1;
+    if (zclSmartLight_CurrentLevel >= 255) zclSmartLight_CurrentLevel = 255;
     zclSmartLight_OnOff = pCmd->withOnOff;
-    if (pCmd->withOnOff == LIGHT_ON) hal_wsled_setBrightness(pCmd->level);
-    else hal_wsled_setBrightness(0);
+
+    if (pCmd->withOnOff == LIGHT_ON) {
+        if (zclSmartLight_ColorMode == COLOR_MODE_COLOR_TEMPERATURE)
+            hal_wsled_setColorTemp(zclSmartLight_CurrentLevel, zclSmartLight_ColorTemperature);
+        else if (zclSmartLight_ColorMode == COLOR_MODE_CURRENT_HUE_SATURATION)
+            hal_wsled_setHueSat(zclSmartLight_CurrentLevel, zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
+    }
+    else hal_wsled_setColorTemp(0, 0);
 }
 
 ZStatus_t zclSmartLight_MoveToHueCB(zclCCMoveToHue_t* pCmd) {
@@ -104,7 +117,7 @@ ZStatus_t zclSmartLight_MoveToHueCB(zclCCMoveToHue_t* pCmd) {
     if (zclSmartLight_CurrentHue > 254) zclSmartLight_CurrentHue = 254;
 
     zclSmartLight_ColorMode = COLOR_MODE_CURRENT_HUE_SATURATION;
-    hal_wsled_setHueSat(zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
+    hal_wsled_setHueSat(zclSmartLight_CurrentLevel, zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
     return SUCCESS;
 }
 
@@ -114,7 +127,7 @@ ZStatus_t zclSmartLight_MoveToSaturationCB(zclCCMoveToSaturation_t* pCmd) {
     if (zclSmartLight_CurrentSaturation > 254) zclSmartLight_CurrentSaturation = 254;
 
     zclSmartLight_ColorMode = COLOR_MODE_CURRENT_HUE_SATURATION;
-    hal_wsled_setHueSat(zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
+    hal_wsled_setHueSat(zclSmartLight_CurrentLevel, zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
     return SUCCESS;
 }
 
@@ -124,6 +137,6 @@ ZStatus_t zclSmartLight_MoveToColorTemperatureCB(zclCCMoveToColorTemperature_t* 
     if (zclSmartLight_ColorTemperature > 500) zclSmartLight_ColorTemperature = 500;
     
     zclSmartLight_ColorMode = COLOR_MODE_COLOR_TEMPERATURE;
-    hal_wsled_setColorTemp(zclSmartLight_ColorTemperature);
+    hal_wsled_setColorTemp(zclSmartLight_CurrentLevel, zclSmartLight_ColorTemperature);
     return SUCCESS;
 }

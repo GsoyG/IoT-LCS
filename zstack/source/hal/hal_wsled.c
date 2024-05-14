@@ -19,25 +19,33 @@ void WS2812_storeColor(uint8 color);
 float hue_to_rgb(float p, float q, float t);
 // 将HSL颜色转换为RGB颜色
 void hsl_to_rgb(float h, float s, float l, uint8* r, uint8* g, uint8* b);
-
+// 调整RGB颜色亮度
+void rgb_adjust_dimmer(uint8* r, uint8* g, uint8* b, uint8 dimmer);
 
 float hue_to_rgb(float p, float q, float t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
-    if (t < 1.0 / 6) return p + (q - p) * 6 * t;
-    if (t < 1.0 / 2) return q;
-    if (t < 2.0 / 3) return p + (q - p) * (2.0 / 3 - t) * 6;
+    if (t < 1.0f / 6) return p + (q - p) * 6 * t;
+    if (t < 1.0f / 2) return q;
+    if (t < 2.0f / 3) return p + (q - p) * (2.0f / 3 - t) * 6;
     return p;
 }
 void hsl_to_rgb(float h, float s, float l, uint8* r, uint8* g, uint8* b) {
     if (s == 0) *r = *g = *b = (uint8)l; // 饱和度为0时，颜色为灰色，直接设置为明度
     else {
-        float q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        float q = l < 0.5f ? l * (1 + s) : l + s - l * s;
         float p = 2 * l - q;
-        *r = (uint8)(255 * hue_to_rgb(p, q, h + 1.0 / 3));
+        *r = (uint8)(255 * hue_to_rgb(p, q, h + 1.0f / 3));
         *g = (uint8)(255 * hue_to_rgb(p, q, h));
-        *b = (uint8)(255 * hue_to_rgb(p, q, h - 1.0 / 3));
+        *b = (uint8)(255 * hue_to_rgb(p, q, h - 1.0f / 3));
     }
+}
+void rgb_adjust_dimmer(uint8* r, uint8* g, uint8* b, uint8 dimmer) {
+    float dimmer_f = dimmer / 255.0f;
+    //dimmer_f = 0.8f * dimmer_f + 0.2f; // 重新映射区间，防止过暗
+    *r = (uint8)(*r * dimmer_f);
+    *g = (uint8)(*g * dimmer_f);
+    *b = (uint8)(*b * dimmer_f);
 }
 
 void WS2812_storeBit(uint8 bit) {
@@ -84,20 +92,18 @@ void hal_wsled_setRgb(uint8 red, uint8 green, uint8 blue) {
     }
 }
 
-void hal_wsled_setHueSat(uint8 hue, uint8 sat) {
+void hal_wsled_setHueSat(uint8 dimmer, uint8 hue, uint8 sat) {
     uint8 rgb[3] = { 0, 0, 0 };
     hsl_to_rgb((float)hue / 254.0f, 1.0f, 1.0f - ((float)sat / 254.0f) / 2.0f, rgb, rgb + 1, rgb + 2);
+    rgb_adjust_dimmer(rgb, rgb + 1, rgb + 2, dimmer);
     hal_wsled_setRgb(rgb[0], rgb[1], rgb[2]);
 }
 
-void hal_wsled_setColorTemp(uint16 colorTemp) {
+void hal_wsled_setColorTemp(uint8 dimmer, uint16 colorTemp) {
     uint8 rgb[3] = { 0, 0, 0 };
     hsl_to_rgb(0.083f, 1.0f, 1.0f - ((float)colorTemp / 500.0f) * 0.4f, rgb, rgb + 1, rgb + 2);
+    rgb_adjust_dimmer(rgb, rgb + 1, rgb + 2, dimmer);
     hal_wsled_setRgb(rgb[0], rgb[1], rgb[2]);
-}
-
-void hal_wsled_setBrightness(uint8 brightness) {
-    hal_wsled_setRgb(brightness, brightness, brightness);
 }
 
 void hal_wsled_init(void) {
