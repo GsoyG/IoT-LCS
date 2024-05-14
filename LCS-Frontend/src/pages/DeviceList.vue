@@ -25,9 +25,14 @@
               </v-col>
             </v-row>
 
-            <!-- 设备颜色亮度条 -->
-            <v-progress-linear :model-value="device.Dimmer / 254 * 100" :color="`#${device.RGB}`" height="20"
-              rounded></v-progress-linear>
+            <!-- 设备颜色亮度、温湿度 -->
+            <v-slider min="1" max="254" step="1" v-model="device.Dimmer" label="亮度" :disabled="disabledEdit"
+              @end="updateDeviceState(device, 'Dimmer', device.Dimmer)" :color="`#${device.RGB}`" hide-details
+              class="mr-5"></v-slider>
+            <div class="d-flex justify-space-between align-center mt-3">
+              <span><v-icon icon="mdi-thermometer"></v-icon>温度：{{ device.Temperature }} ℃</span>
+              <span><v-icon icon="mdi-water-percent"></v-icon>湿度：{{ device.Humidity }} ％</span>
+            </div>
           </div>
 
           <v-card-actions>
@@ -42,19 +47,21 @@
               <template v-slot:default="{ isActive }">
                 <v-card title="设备编辑">
                   <div class="mx-4">
-                    <div class="d-flex justify-center my-2">
+                    <div class="d-flex justify-center my-5">
                       <v-col cols="auto"
                         :style="`width: 100px; height: 100px; background: #${deviceConfig.RGB}; border-radius: 20px;`"></v-col>
                     </div>
                     <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
-                      :disabled="disabledEdit"
-                      @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"></v-slider>
+                      :disabled="disabledEdit" @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"
+                      hide-details class="mb-5 mr-5"></v-slider>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Hue" label="色调" :disabled="disabledEdit"
-                      @end="updateDeviceColor(device, 'Hue', deviceConfig.Hue)"></v-slider>
+                      @end="updateDeviceColor(device, 'Hue', deviceConfig.Hue)" hide-details
+                      class="mb-5 mr-5"></v-slider>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Sat" label="饱和" :disabled="disabledEdit"
-                      @end="updateDeviceColor(device, 'Sat', deviceConfig.Sat)"></v-slider>
+                      @end="updateDeviceColor(device, 'Sat', deviceConfig.Sat)" hide-details
+                      class="mb-5 mr-5"></v-slider>
                     <v-slider min="0" max="500" step="1" v-model="deviceConfig.CT" label="色温" :disabled="disabledEdit"
-                      @end="updateDeviceColor(device, 'CT', deviceConfig.CT)"></v-slider>
+                      @end="updateDeviceColor(device, 'CT', deviceConfig.CT)" hide-details class="mb-5 mr-5"></v-slider>
                   </div>
 
                   <v-card-actions>
@@ -131,8 +138,12 @@ async function fetchDeviceList() {
 
     // 检查设备照明模式
     deviceList.value.forEach(device => {
-      if (device.ColorMode == 2)
+      if (device.ColorMode == 2) // 更改真实颜色
         device.RGB = hslToRgb(0.083, 1, 1 - device.CT / 500 * 0.3)
+      if (device.ModelId != 'SL0001') { // 非SL0001设备无温湿度
+        device.Humidity = '- -'
+        device.Temperature = '- -'
+      }
     })
     if (deviceList.value.length === 0)
       emptyInfo.value = {
