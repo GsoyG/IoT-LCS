@@ -15,7 +15,7 @@
 
           <div class="mx-4">
             <!-- 设备开关按钮 -->
-            <v-row class="pb-8" justify="center">
+            <v-row justify="center">
               <v-col cols="auto">
                 <v-btn :prepend-icon="device.Reachable && device.Power ? 'mdi-lightbulb' : 'mdi-lightbulb-off'"
                   :color="device.Reachable && device.Power ? '#' + device.RGB : ''" variant="tonal" rounded="lg"
@@ -26,10 +26,14 @@
             </v-row>
 
             <!-- 设备颜色亮度、温湿度 -->
-            <v-slider min="1" max="254" step="1" v-model="device.Dimmer" label="亮度" :disabled="disabledEdit"
-              @end="updateDeviceState(device, 'Dimmer', device.Dimmer)" :color="`#${device.RGB}`" hide-details
-              class="mr-5"></v-slider>
-            <div class="d-flex justify-space-between align-center mt-3">
+            <div class="d-flex justify-space-between align-center">
+              <v-slider min="1" max="254" step="1" v-model="device.Dimmer" label="亮度" :disabled="disabledEdit"
+                @end="updateDeviceState(device, 'Dimmer', device.Dimmer)" :color="`#${device.RGB}`" hide-details
+                class="mr-5"></v-slider>
+              <v-switch :label="device.LightAuto ? '自动' : '手动'" hide-details v-model="device.LightAuto"
+                :disabled="device.ModelId != 'SL0001'" @update:model-value="setLightAutoEnable(device)"></v-switch>
+            </div>
+            <div class="d-flex justify-space-between align-center">
               <span><v-icon icon="mdi-thermometer"></v-icon>温度：{{ device.Temperature }} ℃</span>
               <span><v-icon icon="mdi-water-percent"></v-icon>湿度：{{ device.Humidity }} ％</span>
             </div>
@@ -51,9 +55,14 @@
                       <v-col cols="auto"
                         :style="`width: 100px; height: 100px; background: #${deviceConfig.RGB}; border-radius: 20px;`"></v-col>
                     </div>
-                    <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
-                      :disabled="disabledEdit" @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"
-                      hide-details class="mb-5 mr-5"></v-slider>
+                    <div class="d-flex justify-space-between align-center">
+                      <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
+                        :disabled="disabledEdit" @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"
+                        hide-details class="mb-2 mr-5"></v-slider>
+                      <v-switch :label="device.LightAuto ? '自动' : '手动'" hide-details v-model="device.LightAuto"
+                        :disabled="device.ModelId != 'SL0001'" class="mb-2"
+                        @update:model-value="setLightAutoEnable(device)"></v-switch>
+                    </div>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Hue" label="色调" :disabled="disabledEdit"
                       @end="updateDeviceColor(device, 'Hue', deviceConfig.Hue)" hide-details
                       class="mb-5 mr-5"></v-slider>
@@ -237,6 +246,11 @@ async function switchDevicePower(device) {
     fetchDeviceList()
   }
   disabledEdit.value = false
+}
+
+// 切换亮度自动模式
+async function setLightAutoEnable(device) {
+
 }
 
 // 打开设备编辑对话框，解析设备配置
