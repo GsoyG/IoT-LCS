@@ -2,6 +2,8 @@
 #include "ZCL_SmartLight_Callbacks.h"
 #include "hal/hal_wsled.h"
 
+extern byte zclSmartLight_TaskID;
+
 void zclSmartLight_BasicResetCB(void);
 void zclSmartLight_OnOffCB(uint8 cmd);
 void zclSmartLight_MoveToLevelCB(zclLCMoveToLevel_t* pCmd);
@@ -134,10 +136,12 @@ ZStatus_t zclSmartLight_MoveToSaturationCB(zclCCMoveToSaturation_t* pCmd) {
 ZStatus_t zclSmartLight_MoveToColorTemperatureCB(zclCCMoveToColorTemperature_t* pCmd) {
     if (pCmd->colorTemperature == 1000) { // set manual brightness mode
         zclSmartLight_AutoDimmerMode = 1000;
+        osal_stop_timerEx(zclSmartLight_TaskID, SMARTLIGHT_DIMMER_AUTO_EVT);
         return SUCCESS;
     }
     else if (pCmd->colorTemperature == 1001) { // set automatic brightness mode
         zclSmartLight_AutoDimmerMode = 1001;
+        osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_DIMMER_AUTO_EVT, 5000); // 5 seconds
         return SUCCESS;
     }
     zclSmartLight_ColorTemperature = pCmd->colorTemperature;

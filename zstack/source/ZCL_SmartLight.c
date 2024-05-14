@@ -64,6 +64,7 @@ static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable );
 #endif
 
 void zclSmartLight_Reporting(void);
+void zclSmartLight_DimmerAuto(void);
 
 static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg);
 
@@ -163,7 +164,7 @@ void zclSmartLight_Init( byte task_id ) {
   bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
 
   // Start measurement task for reporting of values
-  osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_REPORTING__EVT, 10000); // 10 seconds for debug
+  osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_REPORTING_EVT, 10000); // 10 seconds
 }
 
 // Event Loop Processor for zclGeneral.
@@ -217,13 +218,20 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
   }
 
   // Attributes reporting event
-  if (events & SMARTLIGHT_REPORTING__EVT) {
+  if (events & SMARTLIGHT_REPORTING_EVT) {
     hal_hdc1080_measurement(&zclSmartLight_Temperature, &zclSmartLight_Humidity);
     hal_bh1750_measurement(&zclSmartLight_Illuminance);
 
     zclSmartLight_Reporting();
 
-    return (events ^ SMARTLIGHT_REPORTING__EVT);
+    return (events ^ SMARTLIGHT_REPORTING_EVT);
+  }
+
+  // Dimmer auto event
+  if (events & SMARTLIGHT_DIMMER_AUTO_EVT) {
+    zclSmartLight_DimmerAuto();
+
+    return (events ^ SMARTLIGHT_DIMMER_AUTO_EVT);
   }
 
   // Discard unknown events
@@ -271,20 +279,6 @@ void zclSmartLight_Reporting(void) {
   pReportCmd = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_NUM * sizeof(zclReport_t)));
   if (pReportCmd != NULL) {
     pReportCmd->numAttr = pReportCmd_NUM;
-    pReportCmd->attrList[0].attrID = ATTRID_ON_OFF;
-    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_BOOLEAN;
-    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_OnOff);
-    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
-
-    pReportCmd->attrList[0].attrID = ATTRID_LEVEL_CURRENT_LEVEL;
-    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT8;
-    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_CurrentLevel);
-    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
-
-    // pReportCmd->attrList[0].attrID = ATTRID_MS_ILLUMINANCE_MEASURED_VALUE;
-    // pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
-    // pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Illuminance);
-    // zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
 
     pReportCmd->attrList[0].attrID = ATTRID_MS_TEMPERATURE_MEASURED_VALUE;
     pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
@@ -295,6 +289,33 @@ void zclSmartLight_Reporting(void) {
     pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
     pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Humidity);
     zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_RELATIVE_HUMIDITY, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+  }
+  osal_mem_free(pReportCmd);
+}
+
+void zclSmartLight_DimmerAuto(void) {
+  // Reporting
+  static uint16 zclSmartLight_SeqNum = 0;
+  afAddrType_t zclSmartLight_DstAddr;
+  zclSmartLight_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
+  zclSmartLight_DstAddr.addr.shortAddr = 0;
+  zclSmartLight_DstAddr.endPoint = 1;
+
+  const uint8 pReportCmd_NUM = 1;
+  zclReportCmd_t* pReportCmd;
+  pReportCmd = osal_mem_alloc(sizeof(zclReportCmd_t) + (pReportCmd_NUM * sizeof(zclReport_t)));
+  if (pReportCmd != NULL) {
+    pReportCmd->numAttr = pReportCmd_NUM;
+
+    pReportCmd->attrList[0].attrID = ATTRID_LEVEL_CURRENT_LEVEL;
+    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT8;
+    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_CurrentLevel);
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
+
+    pReportCmd->attrList[0].attrID = ATTRID_MS_ILLUMINANCE_MEASURED_VALUE;
+    pReportCmd->attrList[0].dataType = ZCL_DATATYPE_UINT16;
+    pReportCmd->attrList[0].attrData = (void*)(&zclSmartLight_Illuminance);
+    zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
   }
   osal_mem_free(pReportCmd);
 }
