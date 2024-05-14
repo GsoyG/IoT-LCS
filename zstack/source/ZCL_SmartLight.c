@@ -210,7 +210,7 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
       zclSmartLight_OnOff = LIGHT_OFF;
     }
     else {
-      hal_wsled_setColorTemp(255, 0);
+      hal_wsled_setColorTemp(254, 0);
       zclSmartLight_OnOff = LIGHT_ON;
     }
     return (events ^ SMARTLIGHT_LED_BLINK_EVT);
@@ -317,7 +317,7 @@ static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t* 
       // End of LED blinking
       osal_stop_timerEx(zclSmartLight_TaskID, SMARTLIGHT_LED_BLINK_EVT);
 
-      hal_wsled_setColorTemp(255, 0);
+      hal_wsled_setColorTemp(254, 0);
       zclSmartLight_OnOff = LIGHT_ON;
     }
     else {

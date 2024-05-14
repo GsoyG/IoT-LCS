@@ -45,6 +45,7 @@ uint8 zclSmartLight_CurrentLevel;
 // Lighting Color Control Cluster
 uint8 zclSmartLight_CurrentHue;
 uint8 zclSmartLight_CurrentSaturation;
+uint16 zclSmartLight_AutoDimmerMode;
 uint16 zclSmartLight_ColorTemperature;
 uint8 zclSmartLight_ColorMode;
 
@@ -245,6 +246,15 @@ CONST zclAttrRec_t zclSmartLight_Attrs[] = {
   {
     ZCL_CLUSTER_ID_LIGHTING_COLOR_CONTROL,
     {
+      ATTRID_LIGHTING_COLOR_CONTROL_CURRENT_Y,
+      ZCL_DATATYPE_UINT16,
+      ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
+      (void*)&zclSmartLight_AutoDimmerMode
+    }
+  },
+  {
+    ZCL_CLUSTER_ID_LIGHTING_COLOR_CONTROL,
+    {
       ATTRID_LIGHTING_COLOR_CONTROL_COLOR_TEMPERATURE,
       ZCL_DATATYPE_UINT16,
       ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
@@ -393,6 +403,7 @@ void zclSmartLight_ResetAttributesToDefaultValues(void) {
   zclSmartLight_CurrentSaturation = 254;
   zclSmartLight_ColorTemperature = 0;
   zclSmartLight_ColorMode = COLOR_MODE_COLOR_TEMPERATURE;
+  zclSmartLight_AutoDimmerMode = 1000; // Manual mode
 
   zclSmartLight_Illuminance = 0;
   zclSmartLight_Temperature = 0;

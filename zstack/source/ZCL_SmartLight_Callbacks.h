@@ -13,6 +13,7 @@ extern uint8 zclSmartLight_CurrentLevel;
 // Lighting Color Control attributes
 extern uint8 zclSmartLight_CurrentHue;
 extern uint8 zclSmartLight_CurrentSaturation;
+extern uint16 zclSmartLight_AutoDimmerMode;
 extern uint16 zclSmartLight_ColorTemperature;
 extern uint8 zclSmartLight_ColorMode;
 

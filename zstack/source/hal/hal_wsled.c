@@ -35,13 +35,13 @@ void hsl_to_rgb(float h, float s, float l, uint8* r, uint8* g, uint8* b) {
     else {
         float q = l < 0.5f ? l * (1 + s) : l + s - l * s;
         float p = 2 * l - q;
-        *r = (uint8)(255 * hue_to_rgb(p, q, h + 1.0f / 3));
-        *g = (uint8)(255 * hue_to_rgb(p, q, h));
-        *b = (uint8)(255 * hue_to_rgb(p, q, h - 1.0f / 3));
+        *r = (uint8)(254 * hue_to_rgb(p, q, h + 1.0f / 3));
+        *g = (uint8)(254 * hue_to_rgb(p, q, h));
+        *b = (uint8)(254 * hue_to_rgb(p, q, h - 1.0f / 3));
     }
 }
 void rgb_adjust_dimmer(uint8* r, uint8* g, uint8* b, uint8 dimmer) {
-    float dimmer_f = dimmer / 255.0f;
+    float dimmer_f = dimmer / 254.0f;
     //dimmer_f = 0.8f * dimmer_f + 0.2f; // 重新映射区间，防止过暗
     *r = (uint8)(*r * dimmer_f);
     *g = (uint8)(*g * dimmer_f);

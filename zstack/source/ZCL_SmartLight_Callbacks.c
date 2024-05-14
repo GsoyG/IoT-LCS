@@ -99,7 +99,7 @@ void zclSmartLight_OnOffCB(uint8 cmd) {
 void zclSmartLight_MoveToLevelCB(zclLCMoveToLevel_t* pCmd) {
     zclSmartLight_CurrentLevel = pCmd->level;
     if (zclSmartLight_CurrentLevel < 1) zclSmartLight_CurrentLevel = 1;
-    if (zclSmartLight_CurrentLevel >= 255) zclSmartLight_CurrentLevel = 255;
+    if (zclSmartLight_CurrentLevel > 254) zclSmartLight_CurrentLevel = 254;
     zclSmartLight_OnOff = pCmd->withOnOff;
 
     if (pCmd->withOnOff == LIGHT_ON) {
@@ -132,6 +132,14 @@ ZStatus_t zclSmartLight_MoveToSaturationCB(zclCCMoveToSaturation_t* pCmd) {
 }
 
 ZStatus_t zclSmartLight_MoveToColorTemperatureCB(zclCCMoveToColorTemperature_t* pCmd) {
+    if (pCmd->colorTemperature == 1000) { // set manual brightness mode
+        zclSmartLight_AutoDimmerMode = 1000;
+        return SUCCESS;
+    }
+    else if (pCmd->colorTemperature == 1001) { // set automatic brightness mode
+        zclSmartLight_AutoDimmerMode = 1001;
+        return SUCCESS;
+    }
     zclSmartLight_ColorTemperature = pCmd->colorTemperature;
     if (zclSmartLight_ColorTemperature < 1) zclSmartLight_ColorTemperature = 1;
     if (zclSmartLight_ColorTemperature > 500) zclSmartLight_ColorTemperature = 500;
