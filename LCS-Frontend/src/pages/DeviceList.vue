@@ -30,8 +30,8 @@
               <v-slider min="1" max="254" step="1" v-model="device.Dimmer" label="亮度" :disabled="disabledEdit"
                 @end="updateDeviceState(device, 'Dimmer', device.Dimmer)" :color="`#${device.RGB}`" hide-details
                 class="mr-5"></v-slider>
-              <v-switch :label="device.LightAuto ? '自动' : '手动'" hide-details v-model="device.LightAuto"
-                :disabled="device.ModelId != 'SL0001'" @update:model-value="setLightAutoEnable(device)"></v-switch>
+              <v-switch :label="device.DimmerAuto ? '自动' : '手动'" hide-details v-model="device.DimmerAuto"
+                :disabled="device.ModelId != 'SL0001'" @update:model-value="setDimmerAutoEnable(device)"></v-switch>
             </div>
             <div class="d-flex justify-space-between align-center">
               <span><v-icon icon="mdi-thermometer"></v-icon>温度：{{ device.Temperature }} ℃</span>
@@ -59,9 +59,9 @@
                       <v-slider min="1" max="254" step="1" v-model="deviceConfig.Dimmer" label="亮度"
                         :disabled="disabledEdit" @end="updateDeviceState(device, 'Dimmer', deviceConfig.Dimmer)"
                         hide-details class="mb-2 mr-5"></v-slider>
-                      <v-switch :label="device.LightAuto ? '自动' : '手动'" hide-details v-model="device.LightAuto"
+                      <v-switch :label="device.DimmerAuto ? '自动' : '手动'" hide-details v-model="device.DimmerAuto"
                         :disabled="device.ModelId != 'SL0001'" class="mb-2"
-                        @update:model-value="setLightAutoEnable(device)"></v-switch>
+                        @update:model-value="setDimmerAutoEnable(device)"></v-switch>
                     </div>
                     <v-slider min="0" max="254" step="1" v-model="deviceConfig.Hue" label="色调" :disabled="disabledEdit"
                       @end="updateDeviceColor(device, 'Hue', deviceConfig.Hue)" hide-details
@@ -153,6 +153,8 @@ async function fetchDeviceList() {
         device.Humidity = '- -'
         device.Temperature = '- -'
       }
+      if (device.Y == 1000) device.DimmerAuto = false
+      if (device.Y == 1001) device.DimmerAuto = true
     })
     if (deviceList.value.length === 0)
       emptyInfo.value = {
@@ -249,8 +251,9 @@ async function switchDevicePower(device) {
 }
 
 // 切换亮度自动模式
-async function setLightAutoEnable(device) {
-
+async function setDimmerAutoEnable(device) {
+  if (device.DimmerAuto) updateDeviceState(device, 'CT', 1001)
+  else updateDeviceState(device, 'CT', 1000)
 }
 
 // 打开设备编辑对话框，解析设备配置
