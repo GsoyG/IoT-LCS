@@ -9,6 +9,9 @@ void hal_wsled_init(void);
 // 设置 LED RGB 颜色
 void hal_wsled_setRgb(uint8 red, uint8 green, uint8 blue);
 
+// 设置 LED RGB 颜色，渐变过渡
+void hal_wsled_setRgb_gradient(uint8 red, uint8 green, uint8 blue);
+
 // 设置色调、饱和度
 void hal_wsled_setHueSat(uint8 dimmer, uint8 hue, uint8 sat);
 

@@ -10,6 +10,9 @@ uint8 WS2812_buffer[WS2812_bufferSize];
 uint8 WS2812_bit = 0;
 uint16 WS2812_byte = 0;
 
+// 当前颜色，用于颜色渐变
+uint8 rgb_current[3] = { 0, 0, 0 };
+
 // 将位存入缓冲区
 void WS2812_storeBit(uint8 bit);
 // 将颜色存入缓冲区
@@ -92,18 +95,27 @@ void hal_wsled_setRgb(uint8 red, uint8 green, uint8 blue) {
     }
 }
 
+void hal_wsled_setRgb_gradient(uint8 red, uint8 green, uint8 blue) {
+    while (rgb_current[0] != red || rgb_current[1] != green || rgb_current[2] != blue) {
+        if (rgb_current[0] != red) rgb_current[0] += (rgb_current[0] < red ? 1 : -1);
+        if (rgb_current[1] != green) rgb_current[1] += (rgb_current[1] < green ? 1 : -1);
+        if (rgb_current[2] != blue) rgb_current[2] += (rgb_current[2] < blue ? 1 : -1);
+        hal_wsled_setRgb(rgb_current[0], rgb_current[1], rgb_current[2]);
+    }
+}
+
 void hal_wsled_setHueSat(uint8 dimmer, uint8 hue, uint8 sat) {
     uint8 rgb[3] = { 0, 0, 0 };
     hsl_to_rgb((float)hue / 254.0f, 1.0f, 1.0f - ((float)sat / 254.0f) / 2.0f, rgb, rgb + 1, rgb + 2);
     rgb_adjust_dimmer(rgb, rgb + 1, rgb + 2, dimmer);
-    hal_wsled_setRgb(rgb[0], rgb[1], rgb[2]);
+    hal_wsled_setRgb_gradient(rgb[0], rgb[1], rgb[2]);
 }
 
 void hal_wsled_setColorTemp(uint8 dimmer, uint16 colorTemp) {
     uint8 rgb[3] = { 0, 0, 0 };
     hsl_to_rgb(0.083f, 1.0f, 1.0f - ((float)colorTemp / 500.0f) * 0.4f, rgb, rgb + 1, rgb + 2);
     rgb_adjust_dimmer(rgb, rgb + 1, rgb + 2, dimmer);
-    hal_wsled_setRgb(rgb[0], rgb[1], rgb[2]);
+    hal_wsled_setRgb_gradient(rgb[0], rgb[1], rgb[2]);
 }
 
 void hal_wsled_init(void) {
