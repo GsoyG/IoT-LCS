@@ -63,7 +63,8 @@ static void zclSmartLight_BindNotification( bdbBindNotificationData_t *data );
 static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable );
 #endif
 
-void zclSmartLight_Reporting(void);
+void zclSmartLight_Reporting_TempHumi(void);
+void zclSmartLight_Reporting_DimmerAuto(void);
 void zclSmartLight_DimmerAuto(void);
 
 static void zclSmartLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg);
@@ -164,7 +165,7 @@ void zclSmartLight_Init( byte task_id ) {
   bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
 
   // Start measurement task for reporting of values
-  osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_REPORTING_EVT, 10000); // 10 seconds
+  osal_start_reload_timer(zclSmartLight_TaskID, SMARTLIGHT_TEMP_HUMI_EVT, 10000); // 10 seconds
 }
 
 // Event Loop Processor for zclGeneral.
@@ -218,18 +219,18 @@ uint16 zclSmartLight_event_loop( byte task_id, uint16 events ) {
   }
 
   // Attributes reporting event
-  if (events & SMARTLIGHT_REPORTING_EVT) {
+  if (events & SMARTLIGHT_TEMP_HUMI_EVT) {
     hal_hdc1080_measurement(&zclSmartLight_Temperature, &zclSmartLight_Humidity);
     hal_bh1750_measurement(&zclSmartLight_Illuminance);
+    zclSmartLight_Reporting_TempHumi();
 
-    zclSmartLight_Reporting();
-
-    return (events ^ SMARTLIGHT_REPORTING_EVT);
+    return (events ^ SMARTLIGHT_TEMP_HUMI_EVT);
   }
 
   // Dimmer auto event
   if (events & SMARTLIGHT_DIMMER_AUTO_EVT) {
     zclSmartLight_DimmerAuto();
+    zclSmartLight_Reporting_DimmerAuto();
 
     return (events ^ SMARTLIGHT_DIMMER_AUTO_EVT);
   }
@@ -267,7 +268,7 @@ static void zclSmartLight_ProcessTouchlinkTargetEnable( uint8 enable ) {
 }
 #endif
 
-void zclSmartLight_Reporting(void) {
+void zclSmartLight_Reporting_TempHumi(void) {
   static uint16 zclSmartLight_SeqNum = 0;
   afAddrType_t zclSmartLight_DstAddr;
   zclSmartLight_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
@@ -293,8 +294,7 @@ void zclSmartLight_Reporting(void) {
   osal_mem_free(pReportCmd);
 }
 
-void zclSmartLight_DimmerAuto(void) {
-  // Reporting
+void zclSmartLight_Reporting_DimmerAuto(void) {
   static uint16 zclSmartLight_SeqNum = 0;
   afAddrType_t zclSmartLight_DstAddr;
   zclSmartLight_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
@@ -318,6 +318,32 @@ void zclSmartLight_DimmerAuto(void) {
     zcl_SendReportCmd(SMARTLIGHT_ENDPOINT, &zclSmartLight_DstAddr, ZCL_CLUSTER_ID_MS_ILLUMINANCE_MEASUREMENT, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, false, zclSmartLight_SeqNum++);
   }
   osal_mem_free(pReportCmd);
+}
+
+void zclSmartLight_DimmerAuto(void) {
+  static uint16 illum_prev = 0;
+  int16 dimmer = zclSmartLight_CurrentLevel;
+  uint16 illum = zclSmartLight_Illuminance;
+  
+  if (illum_prev == 0) { // first time
+    illum_prev = illum;
+    return;
+  }
+
+  if (illum > illum_prev) {
+    dimmer = dimmer + (illum - illum_prev) / 10;
+    if (dimmer > 254) dimmer = 254;
+  } else {
+    dimmer = dimmer - (illum_prev - illum) / 10;
+    if (dimmer < 1) dimmer = 1;
+  }
+  illum_prev = illum;
+
+  zclSmartLight_CurrentLevel = (uint8)dimmer;
+  if (zclSmartLight_ColorMode == COLOR_MODE_COLOR_TEMPERATURE)
+    hal_wsled_setColorTemp(zclSmartLight_CurrentLevel, zclSmartLight_ColorTemperature);
+  else if (zclSmartLight_ColorMode == COLOR_MODE_CURRENT_HUE_SATURATION)
+    hal_wsled_setHueSat(zclSmartLight_CurrentLevel, zclSmartLight_CurrentHue, zclSmartLight_CurrentSaturation);
 }
 
 // Callback in which the status of the commissioning process are reported
