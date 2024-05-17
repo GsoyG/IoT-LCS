@@ -30,7 +30,6 @@ async def init_app():
     # 初始化服务、控制器
     device = DeviceList()
     task = TimingTask(device)
-    task.setup_scheduler()
     device_controller.device = device
     timing_controller.task = task
     app = web.Application(middlewares = [mid.limit_middleware])
