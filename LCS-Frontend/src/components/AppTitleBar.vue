@@ -24,7 +24,7 @@
           <v-card-text>
             <div class="mx-auto text-center">
               <v-avatar color="white" size="80">
-                <v-img :alt="userData.username" :src="`http://q2.qlogo.cn/headimg_dl?dst_uin=${userData.qq}&spec=100`"
+                <v-img :alt="userData.username" :src="`http://q2.qlogo.cn/headimg_dl?dst_uin=${userData.qq}&spec=5`"
                   v-if="userData.qq != ''"></v-img>
                 <v-icon icon="mdi-account" color="indigo" size="60" v-else></v-icon>
               </v-avatar>
