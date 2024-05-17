@@ -1,4 +1,4 @@
-from tinydb import TinyDB, Query
+from tinydb import TinyDB, where
 
 class DatabBase:
     __db = None
@@ -15,7 +15,11 @@ class DatabBase:
     
     def get_items(self, id_key, id_value):
         table = self.__db.table(self.__table_name)
-        return table.search(Query()[id_key] == id_value)
+        return table.search(where(id_key) == id_value)
+    
+    def get_items_query(self, query):
+        table = self.__db.table(self.__table_name)
+        return table.search(query)
     
     def add_item(self, data):
         table = self.__db.table(self.__table_name)
@@ -23,13 +27,13 @@ class DatabBase:
     
     def update_item(self, id_key, data):
         table = self.__db.table(self.__table_name)
-        return table.update(data, Query()[id_key] == data[id_key])
+        return table.update(data, where(id_key) == data[id_key])
     
     def delete_item(self, id_key, id_value):
         table = self.__db.table(self.__table_name)
-        return table.remove(Query()[id_key] == id_value)
+        return table.remove(where(id_key) == id_value)
     
     # 检查表项是否存在
     def check_item(self, id_key, id_value):
         table = self.__db.table(self.__table_name)
-        return table.contains(Query()[id_key] == id_value)
+        return table.contains(where(id_key) == id_value)
