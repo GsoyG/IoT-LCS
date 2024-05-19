@@ -26,4 +26,4 @@ async def get_logs(request):
         count = logs_len
     else: count = offset + count
 
-    return web.json_response(logs[offset : count])
+    return web.json_response({ 'logs': logs[offset : count], 'total': logs_len })

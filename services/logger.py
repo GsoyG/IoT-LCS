@@ -23,4 +23,5 @@ def get_logs(start_time = None, end_time = None, user = None, message = None):
         (where('user').search(user_query)) &
         (where('message').search(message_query))
     )
+    logs.reverse()
     return logs
