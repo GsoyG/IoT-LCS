@@ -24,9 +24,9 @@ const itemsPerPage = ref(8)
 const currentPage = ref(1)
 const headers = [
   { key: 'time', sortable: false, width: '15%', title: '日期时间' },
-  { key: 'type', sortable: false, width: '15%', title: '操作类型' },
-  { key: 'message', sortable: false, width: '45%', title: '操作信息' },
-  { key: 'address', sortable: false, width: '15%', title: 'IP地址' },
+  { key: 'type', sortable: false, width: '10%', title: '操作类型' },
+  { key: 'message', sortable: false, width: '55%', title: '操作信息' },
+  { key: 'address', sortable: false, width: '10%', title: 'IP地址' },
   { key: 'user', sortable: false, width: '10%', title: '用户名称' },
 ]
 const logList = ref([])

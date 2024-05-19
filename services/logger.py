@@ -4,9 +4,11 @@ from services.database import DatabBase
 
 __db = DatabBase('logger')
 
-def write_log(user, message):
+def write_log(user, address, type, message):
     __db.add_item({
         'user': user,
+        'address': address,
+        'type': type,
         'message': message,
         'timestamp': int(time.time())
     })
