@@ -38,10 +38,10 @@ async def login(request):
 @routes.post('/api/logout')
 async def logout(request):
     session = await get_session(request)
+    logger.write_log(session["user"]['username'], '登出')
+    
     if "user" in session:
         del session["user"]
-    
-    logger.write_log(session["user"]['username'], '登出')
     return web.json_response({ 'status': 'OK' })
 
 # 获取用户信息
