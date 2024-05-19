@@ -11,12 +11,14 @@
 import { ref, computed } from 'vue'
 import DeviceList from './pages/DeviceList.vue'
 import TimingTask from './pages/TimingTask.vue'
+import LogViewing from './pages/LogViewing.vue'
 import NotFound from './pages/NotFound.vue'
 
 const routes = {
   '/': DeviceList,
   '/device': DeviceList,
   '/timing': TimingTask,
+  '/log': LogViewing
 }
 const currentPath = ref(window.location.hash)
 
