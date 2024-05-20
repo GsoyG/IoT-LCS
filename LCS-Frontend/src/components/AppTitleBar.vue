@@ -104,7 +104,7 @@ async function getUserInfo() {
 // 登出
 async function logout() {
   await axios.post('/api/logout').then(response => {
-    window.location.href = "http://127.0.0.1:3000/login"
+    window.location.href = "/login"
   }).catch(error => {
     if (error.response)
       showMessage('退出登入失败 ' + error.response.data, 'warning')

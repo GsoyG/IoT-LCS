@@ -84,7 +84,7 @@ async function login() {
     password: data.value.password
   }).then(response => {
     showMessage('登入成功', 'success')
-    window.location.href = "http://127.0.0.1:3000/"
+    window.location.href = "/"
   }).catch(error => {
     if (error.response)
       showMessage('登入失败 ' + error.response.data, 'warning')
