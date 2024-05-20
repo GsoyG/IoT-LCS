@@ -5,13 +5,16 @@ from services.database import DatabBase
 __db = DatabBase('logger')
 
 def write_log(user, address, type, message):
+    timestamp = int(time.time())
     __db.add_item({
         'user': user,
         'address': address,
         'type': type,
         'message': message,
-        'timestamp': int(time.time())
+        'timestamp': timestamp
     })
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+    print(f'LOG:[{current_time}] {user} {address} {type} {message}')
 
 # 查询日志，参数过滤日志
 def get_logs(start_time = None, end_time = None, user = None, address = None, type = None, message = None):

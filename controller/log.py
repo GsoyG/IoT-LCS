@@ -1,8 +1,18 @@
 import json
-from aiohttp import web
+import time
 import services.logger as logger
+from aiohttp import web
+from aiohttp_session import get_session
 
 routes = web.RouteTableDef()
+
+# 记录写入日志时间
+__get_log_record = {
+    'user': {
+        'ip': '',
+        'time': 0,
+    },
+}
 
 # 查询日志
 @routes.get('/api/log/logs')
@@ -33,4 +43,14 @@ async def get_logs(request):
         count = logs_len
     else: count = offset + count
 
+    session = await get_session(request)
+    username = session["user"]['username']
+    record = __get_log_record.get(username, {'ip': '','time': 0})
+    # 1分钟内不重复记录
+    if int(time.time()) - record['time'] > 60 and request.remote == record['ip']:
+        logger.write_log(username, request.remote, '日志查看', '查看日志')
+        __get_log_record[username] = {
+            'ip': request.remote,
+            'time': int(time.time()),
+        }
     return web.json_response({ 'logs': logs[offset : count], 'total': logs_len })

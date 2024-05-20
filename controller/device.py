@@ -1,5 +1,7 @@
 import json
+import services.logger as logger
 from aiohttp import web
+from aiohttp_session import get_session
 from services.devicelist import DeviceList
 
 device: DeviceList = None
@@ -24,6 +26,9 @@ async def set_device_state(request):
     
     # 设置设备状态
     data = await device.set_device_state(state_device, state)
+    session = await get_session(request)
     if isinstance(data, str):
+        logger.write_log(session["user"]['username'], request.remote, '设备管理', f'设置设备失败，{data}')
         return web.Response(status = 429, text = data)
+    logger.write_log(session["user"]['username'], request.remote, '设备管理', f'设置设备成功，设备：{state_device}')
     return web.json_response(data)
