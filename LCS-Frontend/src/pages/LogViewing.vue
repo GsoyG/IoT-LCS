@@ -7,10 +7,48 @@
         :page-text="`第 ${(currentPage - 1) * itemsPerPage + 1} - ${(currentPage - 1) * itemsPerPage + logList.length} 条 共 ${totalItems} 条`"
         items-per-page-text="显示数量：" @update:options="loadItems" :items-per-page-options="itemsPerPageOptions">
 
-        <!-- 表头，包含过滤器 -->
+        <!-- 起止时间筛选菜单按钮 -->
         <template v-slot:header.time>
-          <v-btn append-icon="mdi-filter-menu" variant="text" text="日期时间"></v-btn>
+          <v-btn variant="text"
+            :append-icon="filterDataTime.start_time.toLocaleDateString() != new Date('2024-1-1').toLocaleDateString() ||
+            filterDataTime.end_time.toLocaleDateString() != new Date().toLocaleDateString() ? 'mdi-filter-cog' : 'mdi-filter-menu'" :color="filterDataTime.start_time.toLocaleDateString() != new Date('2024-1-1').toLocaleDateString() ||
+            filterDataTime.end_time.toLocaleDateString() != new Date().toLocaleDateString() ? 'indigo-accent-2' : ''">
+            日期时间
+            <v-menu activator="parent" :close-on-content-click="false">
+              <v-card min-width="300">
+                <v-card-text>
+                  <v-btn variant="outlined">
+                    {{ filterDataTime.start_time.toLocaleDateString() }}
+                    <v-menu activator="parent" :close-on-content-click="false">
+                      <v-card min-width="300">
+                        <v-locale-provider locale="cn">
+                          <v-date-picker v-model="filterDataTime.start_time" title="选择日期" header="选择开始日期"
+                            show-adjacent-months @update:model-value="fetchLogList(0)"></v-date-picker>
+                        </v-locale-provider>
+                      </v-card>
+                    </v-menu>
+                  </v-btn>
+                  &nbsp;至&nbsp;
+                  <v-btn variant="outlined">
+                    {{ filterDataTime.end_time.toLocaleDateString() }}
+                    <v-menu activator="parent" :close-on-content-click="false">
+                      <v-card min-width="300">
+                        <v-locale-provider locale="cn">
+                          <v-date-picker v-model="filterDataTime.end_time" title="选择日期" header="选择结束日期"
+                            show-adjacent-months @update:model-value="fetchLogList(0)"></v-date-picker>
+                        </v-locale-provider>
+                      </v-card>
+                    </v-menu>
+                  </v-btn>
+                  <!-- 清除按钮 -->
+                  <v-btn icon="mdi-close-circle" variant="plain" @click="filterDataTime.start_time = new Date('2024-1-1'); filterDataTime.end_time = new Date();
+                  fetchLogList(0);"></v-btn>
+                </v-card-text>
+              </v-card>
+            </v-menu>
+          </v-btn>
         </template>
+        <!-- 操作类型筛选菜单按钮 -->
         <template v-slot:header.type>
           <v-btn variant="text"
             :append-icon="filterData.type != '' && filterData.type != null ? 'mdi-filter-cog' : 'mdi-filter-menu'"
@@ -27,6 +65,7 @@
             </v-menu>
           </v-btn>
         </template>
+        <!-- 操作信息筛选菜单按钮 -->
         <template v-slot:header.message>
           <v-btn variant="text"
             :append-icon="filterData.message != '' && filterData.message != null ? 'mdi-filter-cog' : 'mdi-filter-menu'"
@@ -42,6 +81,7 @@
             </v-menu>
           </v-btn>
         </template>
+        <!-- IP地址筛选菜单按钮 -->
         <template v-slot:header.address>
           <v-btn variant="text"
             :append-icon="filterData.address != '' && filterData.address != null ? 'mdi-filter-cog' : 'mdi-filter-menu'"
@@ -50,13 +90,14 @@
             <v-menu activator="parent" :close-on-content-click="false">
               <v-card min-width="300">
                 <v-card-text>
-                  <v-text-field v-model="filterData.address" label="信息" variant="outlined" hide-details clearable
+                  <v-text-field v-model="filterData.address" label="IP地址" variant="outlined" hide-details clearable
                     @update:model-value="fetchLogList(0)"></v-text-field>
                 </v-card-text>
               </v-card>
             </v-menu>
           </v-btn>
         </template>
+        <!-- 用户名称筛选菜单按钮 -->
         <template v-slot:header.user>
           <v-btn variant="text"
             :append-icon="filterData.user != '' && filterData.user != null ? 'mdi-filter-cog' : 'mdi-filter-menu'"
@@ -65,7 +106,7 @@
             <v-menu activator="parent" :close-on-content-click="false">
               <v-card min-width="300">
                 <v-card-text>
-                  <v-text-field v-model="filterData.user" label="信息" variant="outlined" hide-details clearable
+                  <v-text-field v-model="filterData.user" label="用户名称" variant="outlined" hide-details clearable
                     @update:model-value="fetchLogList(0)"></v-text-field>
                 </v-card-text>
               </v-card>
@@ -105,7 +146,13 @@ const itemsPerPageOptions = [ // 每页显示多少条
   { value: 15, title: '15' },
   { value: 20, title: '20' },
 ]
+const filterDataTime = ref({
+  start_time: new Date('2024-1-1'),
+  end_time: new Date(),
+})
 const filterData = ref({
+  start_time: '',
+  end_time: '',
   user: '',
   address: '',
   type: '',
@@ -141,6 +188,11 @@ function showMessage(text, type) {
 async function fetchLogList(offset) {
   loading.value = true
   currentPage.value = offset / itemsPerPage.value + 1 // 当前页码
+  // 格式化起止时间
+  filterDataTime.value.start_time.setHours(0, 0, 0)
+  filterDataTime.value.end_time.setHours(23, 59, 59)
+  filterData.value.start_time = filterDataTime.value.start_time.getTime() / 1000
+  filterData.value.end_time = filterDataTime.value.end_time.getTime() / 1000
 
   await axios.get('/api/log/logs', {
     params: {
@@ -166,6 +218,6 @@ async function fetchLogList(offset) {
 
 // 更新列表显示
 function loadItems({ page, itemsPerPage, sortBy }) {
-  fetchLogList((page - 1) * itemsPerPage, itemsPerPage)
+  fetchLogList((page - 1) * itemsPerPage)
 }
 </script>
