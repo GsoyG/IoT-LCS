@@ -16,6 +16,7 @@
           <!-- 显示面板 -->
           <div class="mx-4">
             <div class="text-truncate">
+              <span class="text-h6" v-if="task.devices.length === 0">未绑定设备</span>
               <span class="text-h6" v-for="device in task.devices">{{ device + '、' }}</span>
             </div>
             <v-divider class="my-2"></v-divider>
@@ -322,5 +323,10 @@ async function editTask(config) {
   if (actionType === 'Power')
     taskConfig.value.action.value = config.action.Power ? '开' : '关'
   else taskConfig.value.action.value = Object.values(config.action)[0]
+
+  // 添加配置中的设备到设备列表
+  config.devices.forEach(device => {
+    if (!deviceList.value.includes(device)) deviceList.value.push(device)
+  })
 }
 </script>

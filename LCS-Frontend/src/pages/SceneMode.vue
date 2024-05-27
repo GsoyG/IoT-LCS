@@ -17,6 +17,7 @@
           <!-- 显示面板 -->
           <div class="mx-4 mt-4">
             <div class="text-truncate">
+              <span class="text-h6" v-if="mode.devices.length === 0">未绑定设备</span>
               <span class="text-h6" v-for="device in mode.devices">{{ device + '、' }}</span>
             </div>
             <v-divider class="my-2"></v-divider>
@@ -298,5 +299,10 @@ async function editMode(config) {
   if (actionType === 'Power')
     modeConfig.value.action.value = config.action.Power ? '开' : '关'
   else modeConfig.value.action.value = Object.values(config.action)[0]
+
+  // 添加配置中的设备到设备列表
+  config.devices.forEach(device => {
+    if (!deviceList.value.includes(device)) deviceList.value.push(device)
+  })
 }
 </script>
