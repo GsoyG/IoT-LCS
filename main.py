@@ -21,13 +21,6 @@ logging.basicConfig(level = logging.DEBUG)
 aiohttp_logger = logging.getLogger("aiohttp.server")
 aiohttp_logger.setLevel(logging.DEBUG)
 
-# 首页
-async def handle_index(request):
-    index_html_path = Path(__file__).parent.resolve() / 'static' / 'index.html'
-    return web.FileResponse(index_html_path, headers = {
-        'Cache-Control': 'no-cache',
-    })
-
 # 异步入口
 async def init_app():
     # 初始化服务、控制器
@@ -45,7 +38,6 @@ async def init_app():
     app.middlewares.append(mid.auth_middleware)
 
     # 添加路由
-    app.router.add_get('/', handle_index)
     app.add_routes(log_controller.routes)
     app.add_routes(auth_controller.routes)
     app.add_routes(device_controller.routes)
