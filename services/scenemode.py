@@ -10,7 +10,7 @@ class SceneMode:
     def get_mode_list(self):
         return self.__db.get_table()
     
-    def switch_mode(self, name):
+    async def switch_mode(self, name):
         if not self.__db.check_item('name', name):
             return '模式名称不存在'
         
@@ -29,7 +29,7 @@ class SceneMode:
         
         # 开启模式
         self.__db.update_item('name', { 'name': name, 'enable': True })
-        self.__client.set_device_list_state(mode['devices'], mode['action'])
+        await self.__client.set_device_list_state(mode['devices'], mode['action'])
         return 'OK'
 
     def add_mode(self, mode):
@@ -53,7 +53,7 @@ class SceneMode:
         self.__db.delete_item('name', name)
         return 'OK'
     
-    def update_mode(self, mode):
+    async def update_mode(self, mode):
         # 检查参数
         name = mode['name']
         if not self.__db.check_item('name', name):
@@ -61,7 +61,7 @@ class SceneMode:
         
         # 检查模式是否已经启动
         if self.__db.get_items('name', name)[0]['enable']:
-            self.__client.set_device_list_state(mode['devices'], mode['action'])
+            await self.__client.set_device_list_state(mode['devices'], mode['action'])
         self.__db.update_item('name', mode)
         return 'OK'
     

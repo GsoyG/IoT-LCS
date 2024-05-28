@@ -27,7 +27,7 @@ async def set_scene_mode(request):
     elif action == 'delete':
         result = scene.delete_mode(data)
     elif action == 'update':
-        result = scene.update_mode(data)
+        result = await scene.update_mode(data)
     else: return web.Response(status = 400, text = '参数错误：未知操作')
     
     session = await get_session(request)
@@ -45,7 +45,7 @@ async def switch_scene_mode(request):
     except KeyError:
         return web.Response(status = 400, text = '参数错误：找不到指定参数')
     
-    result = scene.switch_mode(name)
+    result = await scene.switch_mode(name)
     session = await get_session(request)
     if result != 'OK':
         logger.write_log(session["user"]['username'], request.remote, '场景模式', f'切换模式失败，{result}')
