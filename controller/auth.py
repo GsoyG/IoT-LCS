@@ -30,17 +30,17 @@ async def login(request):
         session = await new_session(request)
         session['user'] = { 'username': username }
 
-        logger.write_log(username, request.remote, '用户认证', '成功登入')
+        logger.write_log(username, request, '用户认证', '成功登入')
         return web.json_response({ 'status': 'OK' })
     else:
-        logger.write_log(username, request.remote, '用户认证', '登入失败，用户名或密码错误')
+        logger.write_log(username, request, '用户认证', '登入失败，用户名或密码错误')
         return web.Response(status = 401, text = '用户名或密码错误')
 
 # 登出
 @routes.post('/api/logout')
 async def logout(request):
     session = await get_session(request)
-    logger.write_log(session["user"]['username'], request.remote, '用户认证', '成功登出')
+    logger.write_log(session["user"]['username'], request, '用户认证', '成功登出')
     
     if "user" in session:
         del session["user"]

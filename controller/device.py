@@ -28,7 +28,7 @@ async def set_device_state(request):
     data = await device.set_device_state(state_device, state)
     session = await get_session(request)
     if isinstance(data, str):
-        logger.write_log(session["user"]['username'], request.remote, '设备管理', f'设置设备失败，{data}')
+        logger.write_log(session["user"]['username'], request, '设备管理', f'设置设备失败，{data}')
         return web.Response(status = 429, text = data)
-    logger.write_log(session["user"]['username'], request.remote, '设备管理', f'设置设备成功，设备：{state_device}')
+    logger.write_log(session["user"]['username'], request, '设备管理', f'设置设备成功，设备：{state_device}')
     return web.json_response(data)

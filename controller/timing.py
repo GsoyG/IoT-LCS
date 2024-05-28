@@ -32,7 +32,7 @@ async def set_timing_task(request):
     
     session = await get_session(request)
     if result != 'OK':
-        logger.write_log(session["user"]['username'], request.remote, '定时任务', f'设置任务失败，{result}')
+        logger.write_log(session["user"]['username'], request, '定时任务', f'设置任务失败，{result}')
         return web.Response(status = 400, text = result)
-    logger.write_log(session["user"]['username'], request.remote, '定时任务', f'设置任务成功，任务：{data['name']}')
+    logger.write_log(session["user"]['username'], request, '定时任务', f'设置任务成功，任务：{data['name']}')
     return web.json_response({ 'status': 'OK' })

@@ -48,7 +48,7 @@ async def get_logs(request):
     record = __get_log_record.get(username, {'ip': '','time': 0})
     # 1分钟内不重复记录
     if int(time.time()) - record['time'] > 60 and request.remote == record['ip']:
-        logger.write_log(username, request.remote, '日志查看', '查看日志')
+        logger.write_log(username, request, '日志查看', '查看日志')
         __get_log_record[username] = {
             'ip': request.remote,
             'time': int(time.time()),

@@ -32,9 +32,9 @@ async def set_scene_mode(request):
     
     session = await get_session(request)
     if result != 'OK':
-        logger.write_log(session["user"]['username'], request.remote, '场景模式', f'设置模式失败，{result}')
+        logger.write_log(session["user"]['username'], request, '场景模式', f'设置模式失败，{result}')
         return web.Response(status = 400, text = result)
-    logger.write_log(session["user"]['username'], request.remote, '场景模式', f'设置模式成功，模式：{data['name']}')
+    logger.write_log(session["user"]['username'], request, '场景模式', f'设置模式成功，模式：{data['name']}')
     return web.json_response({ 'status': 'OK' })
 
 # 切换场景模式
@@ -48,7 +48,7 @@ async def switch_scene_mode(request):
     result = await scene.switch_mode(name)
     session = await get_session(request)
     if result != 'OK':
-        logger.write_log(session["user"]['username'], request.remote, '场景模式', f'切换模式失败，{result}')
+        logger.write_log(session["user"]['username'], request, '场景模式', f'切换模式失败，{result}')
         return web.Response(status = 400, text = result)
-    logger.write_log(session["user"]['username'], request.remote, '场景模式', f'切换模式成功，模式：{name}')
+    logger.write_log(session["user"]['username'], request, '场景模式', f'切换模式成功，模式：{name}')
     return web.json_response({ 'status': 'OK' })

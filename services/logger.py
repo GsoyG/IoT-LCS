@@ -4,7 +4,11 @@ from services.database import DatabBase
 
 __db = DatabBase('logger')
 
-def write_log(user, address, type, message):
+def write_log(user, request, type, message):
+    address = request.headers.get("X-Forwarded-For", '')
+    if address == '':
+        address = request.headers.get("X-Real-IP", request.remote)
+
     timestamp = int(time.time())
     __db.add_item({
         'user': user,
