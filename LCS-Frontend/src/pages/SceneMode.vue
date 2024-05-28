@@ -15,7 +15,7 @@
             {{ mode.name }}</v-card-title>
 
           <!-- 显示面板 -->
-          <div class="mx-4 mt-4">
+          <div class="mx-4 mt-2">
             <div class="text-truncate">
               <span class="text-h6" v-if="mode.devices.length === 0">未绑定设备</span>
               <span class="text-h6" v-for="device in mode.devices">{{ device + '、' }}</span>
@@ -23,7 +23,8 @@
             <v-divider class="my-2"></v-divider>
             <div class="d-flex justify-space-between align-center">
               <span class="text-h5">{{ mode.enable ? '已启用' : '已关闭' }}</span>
-              <v-btn class="my-2" text="切换" color="indigo" @click="switchModeRequest(mode.name)"></v-btn>
+              <v-btn prepend-icon="mdi-swap-horizontal" variant="tonal" class="my-2" text="切换"
+                @click="switchModeRequest(mode.name)" :disabled="switchWating"></v-btn>
             </div>
             <p>操作：{{ parseActionText(mode.action) }}</p>
           </div>
@@ -137,6 +138,7 @@ import { ref, onMounted } from 'vue'
 
 const modeList = ref([])
 const deviceList = ref([])
+const switchWating = ref(false) // 等待切换模式中
 const modeConfig = ref({
   'name': '',
   'devices': [],
@@ -271,6 +273,7 @@ async function deleteMode(modeName) {
 
 // 切换场景模式
 async function switchModeRequest(modeName) {
+  switchWating.value = true
   await axios.get('/api/scene/switchMode', {
     params: {
       name: modeName
@@ -282,6 +285,7 @@ async function switchModeRequest(modeName) {
       showMessage('切换模式失败：' + error.response.data, 'warning')
     else showMessage('切换模式出错：' + error.message, 'warning')
   })
+  switchWating.value = false
   fetchModeList()
 }
 
