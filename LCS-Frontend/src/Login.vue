@@ -72,6 +72,10 @@ function showMessage(text, type) {
   }
 }
 
+onMounted(() => {
+  getUserInfo()
+})
+
 // 登入
 async function login() {
   if (!data.value.form) return
@@ -82,12 +86,19 @@ async function login() {
     password: data.value.password
   }).then(response => {
     showMessage('登入成功', 'success')
-    window.location.href = "/"
+    window.location.href = '/dashboard'
   }).catch(error => {
     if (error.response)
       showMessage('登入失败 ' + error.response.data, 'warning')
     else showMessage('登入出错 ' + error.message, 'warning')
   })
   data.value.loading = false
+}
+
+// 获取用户信息
+async function getUserInfo() {
+  await axios.get('/api/user/info').then(response => {
+    window.location.href = '/dashboard'
+  })
 }
 </script>

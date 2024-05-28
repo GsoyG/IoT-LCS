@@ -95,8 +95,15 @@ async function getUserInfo() {
   await axios.get('/api/user/info').then(response => {
     userData.value = response.data
   }).catch(error => {
-    if (error.response)
+    if (error.response) {
       showMessage('获取用户信息失败 ' + error.response.data, 'warning')
+
+      if (error.response.status == 401) {
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 2000);
+      }
+    }
     else showMessage('获取用户信息出错 ' + error.message, 'warning')
   })
 }
@@ -104,11 +111,15 @@ async function getUserInfo() {
 // 登出
 async function logout() {
   await axios.post('/api/logout').then(response => {
-    window.location.href = "/login"
+    window.location.href = '/'
   }).catch(error => {
     if (error.response)
       showMessage('退出登入失败 ' + error.response.data, 'warning')
     else showMessage('退出登入出错 ' + error.message, 'warning')
+
+    setTimeout(() => {
+      window.location.href = '/'
+    }, 2000);
   })
 }
 </script>

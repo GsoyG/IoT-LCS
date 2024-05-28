@@ -3,6 +3,7 @@ import Components from 'unplugin-vue-components/vite'
 import Vue from '@vitejs/plugin-vue'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 import ViteFonts from 'unplugin-fonts/vite'
+import path from 'path'
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -44,4 +45,12 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  build: {
+    rollupOptions: {
+      input: {
+        index: path.resolve(__dirname, 'index.html'),
+        dashboard: path.resolve(__dirname, 'dashboard.html'),
+      },
+    },
+  }
 })
